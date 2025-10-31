@@ -24,6 +24,8 @@ struct UserForm {
     account_balance: bigdecimal::BigDecimal,
     #[form(label = "Accept Terms")]
     accept_terms: Accept,
+    #[form(label = "Payment Method")]
+    payment_method: PaymentMethod,
 }
 
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -110,6 +112,19 @@ enum Country {
     Spain,
     #[strum(to_string = "Portugal")]
     Portugal,
+}
+
+#[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+enum PaymentMethod {
+    CreditCard(String), // Card number as a single unnamed field
+    BankTransfer {
+        #[form(label = "Account Number")]
+        account_number: String,
+        #[form(label = "Routing Number")]
+        routing_number: String,
+    },
+    #[default]
+    Cash,
 }
 
 #[component]

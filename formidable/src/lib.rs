@@ -15,6 +15,8 @@ use leptos::{ev::SubmitEvent, prelude::*, server_fn::ServerFn};
 
 use std::fmt::Debug;
 
+
+
 pub trait Form: Sized + Send + Sync + 'static {
     fn view(
         label: &'static str,
