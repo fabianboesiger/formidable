@@ -1,0 +1,10 @@
+[workspace]
+members = [
+    "formidable", "formidable-derive", "formidable-example",
+]
+resolver = "3"
+
+[workspace.dependencies]
+leptos = "0.8.10"
+leptos_meta = "0.8.5"
+leptos_axum = "0.8.6"
