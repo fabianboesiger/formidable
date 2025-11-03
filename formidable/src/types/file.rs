@@ -56,15 +56,21 @@ pub enum FileError {
 
 impl Form for File {
     fn view(
-        label: &'static str,
+        field: crate::FieldConfiguration,
         name: Name,
         value: Option<Self>,
         callback: Option<Callback<Result<Self, FormError>>>,
     ) -> impl IntoView {
         view! {
-            <FileInput label=label name=name value=value callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
-                callback.run(v.map_err(FormError::from));
-            }))} />
+            <FileInput
+                label=field.label
+                description=field.description
+                name=name
+                value=value
+                callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
+                    callback.run(v.map_err(FormError::from));
+                }))}
+            />
         }
     }
 }

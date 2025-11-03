@@ -4,7 +4,7 @@ use std::fmt::{Debug, Display};
 pub struct Name([Option<NamePart>; 16]);
 
 impl Name {
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.0.iter().take_while(|part| part.is_some()).count()
     }
 

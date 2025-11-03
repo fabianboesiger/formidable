@@ -1,0 +1,18 @@
+[package]
+name = "formidable-receipts"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+typst = { version = "0.14" }
+typst-pdf = { version = "0.14" }
+typst-kit = { version = "0.14" }
+zune-inflate = { version = "0.2", default-features = false, features = [
+  "gzip",
+  "std",
+] }
+tar = { version = "0.4" }
+ureq = { version = "3.1" }
+time = { version = "0.3" }
+formidable = { path = "../formidable", features = ["serde"] }
+serde_json = "1.0"

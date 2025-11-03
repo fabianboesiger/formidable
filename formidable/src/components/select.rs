@@ -1,25 +1,22 @@
 use leptos::prelude::*;
 
 use crate::Name;
-use std::fmt::Display;
 use strum::VariantArray;
 
 #[component]
-pub fn Select<T>(#[prop(into)] label: &'static str, name: Name, value: RwSignal<T>) -> impl IntoView
+pub fn Select<T>(
+    #[prop(into)] label: TextProp,
+    #[prop(into, default = None)] description: Option<TextProp>,
+    name: Name,
+    value: RwSignal<T>,
+    value_label: impl Fn(&T) -> TextProp + 'static,
+) -> impl IntoView
 where
-    T: Clone
-        + Copy
-        + Display
-        + Into<&'static str>
-        + VariantArray
-        + PartialEq
-        + Send
-        + Sync
-        + 'static,
+    T: Clone + Copy + Into<&'static str> + VariantArray + PartialEq + Send + Sync + 'static,
 {
     view! {
         <div class="field select-field">
-            <label for=name.to_string()>{label}</label>
+            <label for=name.to_string()>{label.get()}</label>
             <select
                 name=name.to_string()
                 id=name.to_string()
@@ -37,15 +34,21 @@ where
                 { T::VARIANTS.iter().map(move |&option| {
                     let option_value: &'static str = option.into();
                     let is_selected = move || value.get() == option;
+                    let value_label = value_label(&option);
                     view! {
                         <option
                             value=option_value
                             selected=is_selected
                         >
-                            {format!("{}", option)}
+                            {value_label.get()}
                         </option>
                     }
                 }).collect::<Vec<_>>() }
+                {
+                    description.map(|desc| view! {
+                        <p class="description">{desc.get()}</p>
+                    })
+                }
             </select>
         </div>
     }

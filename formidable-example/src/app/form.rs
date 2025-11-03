@@ -7,18 +7,24 @@ use formidable::{
 use leptos::server_fn::codec::Json;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
-use strum::{Display, IntoStaticStr, VariantArray};
 use url::Url;
+
+use crate::app::i18n::*;
 
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize)]
 struct UserForm {
-    #[form(label = "Personal Information")]
+    #[form(
+        label = personal_information,
+        description = "Please provide your personal details."
+    )]
     personal_info: PersonalInfo,
-    #[form(label = "Contact Information")]
+    #[form(
+        label = contact_information,
+    )]
     contact_info: ContactInfo,
     #[form(label = "Addresses")]
     addresses: Vec<Address>,
-    #[form(label = "User Type")]
+    #[form(label = user_type)]
     user_type: UserType,
     #[form(label = "Account Balance")]
     account_balance: bigdecimal::BigDecimal,
@@ -64,78 +70,67 @@ struct Address {
     country: Country,
 }
 
-#[derive(
-    Form,
-    Clone,
-    Copy,
-    Debug,
-    PartialEq,
-    Default,
-    VariantArray,
-    IntoStaticStr,
-    Display,
-    Serialize,
-    Deserialize,
-)]
+#[derive(Form, Clone, Copy, Debug, PartialEq, Default, Serialize, Deserialize)]
 enum UserType {
-    #[strum(to_string = "Admin")]
+    #[form(label = "Admin")]
     Admin,
-    #[strum(to_string = "Regular User")]
+    #[form(label = regular_user)]
     #[default]
     Regular,
 }
 
-#[derive(
-    Form,
-    Clone,
-    Copy,
-    Debug,
-    PartialEq,
-    Default,
-    VariantArray,
-    IntoStaticStr,
-    Display,
-    Serialize,
-    Deserialize,
-)]
+#[derive(Form, Clone, Copy, Debug, PartialEq, Default, Serialize, Deserialize)]
 enum Country {
-    #[strum(to_string = "Switzerland")]
+    #[form(label = switzerland)]
     #[default]
     Switzerland,
-    #[strum(to_string = "Germany")]
+    #[form(label = "Germany")]
     Germany,
-    #[strum(to_string = "France")]
+    #[form(label = "France")]
     France,
-    #[strum(to_string = "Italy")]
+    #[form(label = "Italy")]
     Italy,
-    #[strum(to_string = "Spain")]
+    #[form(label = "Spain")]
     Spain,
-    #[strum(to_string = "Portugal")]
+    #[form(label = "Portugal")]
     Portugal,
 }
 
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 enum PaymentMethod {
+    #[form(label = "Credit Card")]
     CreditCard(String), // Card number as a single unnamed field
+    #[form(label = "Bank Transfer")]
     BankTransfer {
         #[form(label = "Account Number")]
         account_number: String,
         #[form(label = "Routing Number")]
         routing_number: String,
     },
+    #[form(label = "Cash")]
     #[default]
     Cash,
 }
 
 #[component]
 pub fn ExampleForm() -> impl IntoView {
+    let i18n = use_i18n();
+
+    let on_switch = move |_| {
+        let new_locale = match i18n.get_locale() {
+            Locale::en => Locale::de,
+            Locale::de => Locale::en,
+        };
+        i18n.set_locale(new_locale);
+    };
+
     view! {
+        <button on:click=on_switch>{t!(i18n, personal_information)}</button>
         <FormidableServerAction<HandleUserForm, UserForm> label="Example Form" name="user_form" />
     }
 }
 
 #[server(
-  endpoint = "handle_user_form",
   input = Json,
   output = Json
 )]

@@ -7,7 +7,8 @@ pub use formidable_derive::Form;
 
 #[component]
 pub fn Checkbox<T>(
-    #[prop(into)] label: &'static str,
+    #[prop(into)] label: TextProp,
+    #[prop(into, default = None)] description: Option<TextProp>,
     #[prop(into)] name: Name,
     #[prop(into)] value: Option<T>,
     #[prop(into)] callback: Option<Callback<Result<T, FieldError>>>,
@@ -53,9 +54,14 @@ where
                         raw_value.set(checked);
                     }
                 />
-                {label}
+                {label.get()}
             </label>
-            { move || touched.get().then(move || value.get().err().map(|e| view! { <span class="error-message">{format!("{}", e)}</span> })) }
+            { move || touched.get().then(move || value.get().err().map(|e| view! { <p class="error-message">{format!("{}", e)}</p> })) }
+            {
+                description.map(|desc| view! {
+                    <p class="description">{desc.get()}</p>
+                })
+            }
         </div>
     }
 }

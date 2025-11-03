@@ -53,20 +53,22 @@ fieldset {
 	margin: 4px 0;
 }
 
+.description {
+	font-size: 12px;
+	margin: 4px 0;
+}
+
 .error-message {
 	color: red;
-	display: block;
 	font-size: 12px;
 }
 
 .success-message {
 	color: green;
-	display: block;
 	font-size: 12px;
 }
 
 .info-message {
-	display: block;
 	font-size: 12px;
 }
 

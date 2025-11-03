@@ -6,7 +6,8 @@ use std::str::FromStr;
 
 #[component]
 pub fn Input<T>(
-    #[prop(into)] label: &'static str,
+    #[prop(into)] label: TextProp,
+    #[prop(into, default = None)] description: Option<TextProp>,
     #[prop(into)] name: Name,
     #[prop(into)] value: Option<T>,
     #[prop(into)] callback: Option<Callback<Result<T, FieldError>>>,
@@ -44,7 +45,7 @@ where
 
     view! {
         <div class:error={move || touched.get() && value.get().is_err()} class="field input-field">
-            <label for=name.to_string()>{label}</label>
+            <label for=name.to_string()>{label.get()}</label>
             <input
                 node_ref=node_ref
                 type={match input_type {
@@ -108,9 +109,14 @@ where
             }
             { move || {
                 touched.get().then(move || value.get().err().map(|e| {
-                    view! { <span class="error-message">{format!("{}", e)}</span> }
+                    view! { <p class="error-message">{format!("{}", e)}</p> }
                 }))
             }}
+            {
+                description.map(|desc| view! {
+                    <p class="description">{desc.get()}</p>
+                })
+            }
         </div>
     }
 }

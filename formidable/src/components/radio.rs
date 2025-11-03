@@ -1,29 +1,27 @@
 use leptos::prelude::*;
 
 use crate::Name;
-use std::fmt::Display;
 use strum::VariantArray;
 
 #[component]
-pub fn Radio<T>(#[prop(into)] label: &'static str, name: Name, value: RwSignal<T>) -> impl IntoView
+pub fn Radio<T>(
+    #[prop(into)] label: TextProp,
+    #[prop(into, default = None)] description: Option<TextProp>,
+    name: Name,
+    value: RwSignal<T>,
+    value_label: impl Fn(&T) -> TextProp + 'static,
+) -> impl IntoView
 where
-    T: Clone
-        + Copy
-        + Display
-        + Into<&'static str>
-        + VariantArray
-        + PartialEq
-        + Send
-        + Sync
-        + 'static,
+    T: Clone + Copy + Into<&'static str> + VariantArray + PartialEq + Send + Sync + 'static,
 {
     view! {
         <div>
             <fieldset class="radio-group">
-                <legend>{label}</legend>
+                <legend>{label.get()}</legend>
                 { T::VARIANTS.iter().map(move |&option| {
                     let is_checked = move || value.get() == option;
                     let option_value: &'static str = option.into();
+                    let value_label = value_label(&option);
                     view! {
                         <div class="field radio-field">
                             <label for=format!("{}-{}", name.to_string(), option_value)>
@@ -38,11 +36,16 @@ where
                                         value.set(option);
                                     }
                                 />
-                                {format!("{}", option)}
+                                {value_label.get()}
                             </label>
                         </div>
                     }
                 }).collect::<Vec<_>>() }
+                {
+                    description.map(|desc| view! {
+                        <p class="description">{desc.get()}</p>
+                    })
+                }
             </fieldset>
         </div>
     }

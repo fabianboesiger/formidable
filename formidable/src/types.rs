@@ -3,6 +3,7 @@
 mod accept;
 #[cfg(feature = "bigdecimal")]
 mod bigdecimal;
+//mod client_metadata;
 #[cfg(feature = "color")]
 mod color;
 mod email;
@@ -20,6 +21,7 @@ mod url;
 pub use accept::*;
 #[cfg(feature = "bigdecimal")]
 pub use bigdecimal::*;
+//pub use client_metadata::*;
 #[cfg(feature = "color")]
 pub use color::*;
 pub use email::*;
@@ -47,23 +49,29 @@ where
     <T as FromStr>::Err: Clone + Display + Send + Sync + 'static,
 {
     fn view(
-        label: &'static str,
+        field: crate::FieldConfiguration,
         name: Name,
         value: Option<Self>,
         callback: Option<Callback<Result<Self, FormError>>>,
     ) -> impl IntoView {
         view! {
-            <Input<T> label=label name=name value=value callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
-                callback.run(v.map_err(FormError::from));
-            }))}
-            input_type=T::INPUT_TYPE
-            placeholder=T::PLACEHOLDER
-            required=T::REQUIRED
-            minlength=T::MIN_LENGTH
-            maxlength=T::MAX_LENGTH
-            min=T::MIN
-            max=T::MAX
-            step=T::STEP />
+            <Input<T>
+                label=field.label
+                description=field.description
+                name=name
+                value=value
+                callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
+                    callback.run(v.map_err(FormError::from));
+                }))}
+                input_type=T::INPUT_TYPE
+                placeholder=T::PLACEHOLDER
+                required=T::REQUIRED
+                minlength=T::MIN_LENGTH
+                maxlength=T::MAX_LENGTH
+                min=T::MIN
+                max=T::MAX
+                step=T::STEP
+            />
         }
     }
 }

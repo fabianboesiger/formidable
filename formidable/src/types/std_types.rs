@@ -43,15 +43,21 @@ impl FormType for String {
 
 impl Form for bool {
     fn view(
-        label: &'static str,
+        field: crate::FieldConfiguration,
         name: Name,
         value: Option<Self>,
         callback: Option<Callback<Result<Self, FormError>>>,
     ) -> impl IntoView {
         view! {
-            <Checkbox<bool> label=label name=name value=value callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
-                callback.run(v.map_err(FormError::from));
-            }))} />
+            <Checkbox<bool>
+                label=field.label
+                description=field.description
+                name=name
+                value=value
+                callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
+                    callback.run(v.map_err(FormError::from));
+                }))}
+            />
         }
     }
 }
@@ -61,7 +67,7 @@ where
     T: Form + Clone + Send + Sync + 'static,
 {
     fn view(
-        label: &'static str,
+        field: crate::FieldConfiguration,
         name: Name,
         value: Option<Self>,
         callback: Option<Callback<Result<Self, FormError>>>,
@@ -125,7 +131,7 @@ where
 
         view! {
             <fieldset class="array">
-                <legend>{label}</legend>
+                <legend>{field.label.get()}</legend>
                 <For
                     each={move || children.get().into_iter().enumerate()}
                     key={move |(_, child)| child.id}
@@ -133,7 +139,10 @@ where
 
                         view! {
                             <div class={format!("array-item item-{}", child.id)}>
-                                {T::view(label, name.push_index(index), child.value.and_then(|v| v.ok()), Some(Callback::new(move |v: Result<T, FormError>| {
+                                {T::view(crate::FieldConfiguration {
+                                    label: field.label.clone(),
+                                    description: None,
+                                }, name.push_index(index), child.value.and_then(|v| v.ok()), Some(Callback::new(move |v: Result<T, FormError>| {
                                     let mut children = children.write();
                                     if let Some(pos) = children.iter().position(|c| c.id == child.id) {
                                         children[pos].value = Some(v);

@@ -40,15 +40,22 @@ impl Default for Date {
 
 impl Form for Date {
     fn view(
-        label: &'static str,
+        field: crate::FieldConfiguration,
         name: Name,
         value: Option<Self>,
         callback: Option<Callback<Result<Self, FormError>>>,
     ) -> impl IntoView {
         view! {
-            <Input<Date> label=label name=name value=value callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
-                callback.run(v.map_err(FormError::from));
-            }))} input_type=InputType::Date />
+            <Input<Date>
+                label=field.label
+                description=field.description
+                name=name
+                value=value
+                callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
+                    callback.run(v.map_err(FormError::from));
+                }))}
+                input_type=InputType::Date
+            />
         }
     }
 }
@@ -85,15 +92,22 @@ impl Default for PrimitiveDateTime {
 
 impl Form for PrimitiveDateTime {
     fn view(
-        label: &'static str,
+        field: crate::FieldConfiguration,
         name: Name,
         value: Option<Self>,
         callback: Option<Callback<Result<Self, FormError>>>,
     ) -> impl IntoView {
         view! {
-            <Input<PrimitiveDateTime> label=label name=name value=value callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
-                callback.run(v.map_err(FormError::from));
-            }))} input_type=InputType::DatetimeLocal />
+            <Input<PrimitiveDateTime>
+                label=field.label
+                description=field.description
+                name=name
+                value=value
+                callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
+                    callback.run(v.map_err(FormError::from));
+                }))}
+                input_type=InputType::DatetimeLocal
+            />
         }
     }
 }
@@ -130,15 +144,22 @@ impl Default for Time {
 
 impl Form for Time {
     fn view(
-        label: &'static str,
+        field: crate::FieldConfiguration,
         name: Name,
         value: Option<Self>,
         callback: Option<Callback<Result<Self, FormError>>>,
     ) -> impl IntoView {
         view! {
-            <Input<Time> label=label name=name value=value callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
-                callback.run(v.map_err(FormError::from));
-            }))} input_type=InputType::Time />
+            <Input<Time>
+                label=field.label
+                description=field.description
+                name=name
+                value=value
+                callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
+                    callback.run(v.map_err(FormError::from));
+                }))}
+                input_type=InputType::Time
+            />
         }
     }
 }

@@ -6,20 +6,25 @@ mod name;
 pub mod types;
 
 pub use error::*;
+use icu_locale_core::Locale;
 pub use name::*;
 
 pub use formidable_derive::Form;
 use std::{fmt::Display, marker::PhantomData};
+use time::UtcOffset;
 
 use leptos::{ev::SubmitEvent, prelude::*, server_fn::ServerFn};
 
 use std::fmt::Debug;
 
-
+pub struct FieldConfiguration {
+    pub label: TextProp,
+    pub description: Option<TextProp>,
+}
 
 pub trait Form: Sized + Send + Sync + 'static {
     fn view(
-        label: &'static str,
+        field: FieldConfiguration,
         name: Name,
         value: Option<Self>,
         callback: Option<Callback<Result<Self, FormError>>>,
@@ -28,7 +33,7 @@ pub trait Form: Sized + Send + Sync + 'static {
 
 #[component]
 pub fn FormidableCallback<T>(
-    #[prop(into)] label: &'static str,
+    #[prop(into)] label: TextProp,
     #[prop(into)] name: Name,
     #[prop(optional)] value: Option<T>,
     #[prop(optional)] callback: Option<Callback<Result<T, FormError>>>,
@@ -36,12 +41,20 @@ pub fn FormidableCallback<T>(
 where
     T: Form,
 {
-    T::view(label, name, value, callback)
+    T::view(
+        FieldConfiguration {
+            label,
+            description: None,
+        },
+        name,
+        value,
+        callback,
+    )
 }
 
 #[component]
 pub fn FormidableSignal<T>(
-    #[prop(into)] label: &'static str,
+    #[prop(into)] label: TextProp,
     #[prop(into)] name: Name,
     #[prop(into)] value: RwSignal<T>,
 ) -> impl IntoView
@@ -54,12 +67,20 @@ where
         }
     });
 
-    T::view(label, name, Some(value.get_untracked()), Some(callback))
+    T::view(
+        FieldConfiguration {
+            label,
+            description: None,
+        },
+        name,
+        Some(value.get_untracked()),
+        Some(callback),
+    )
 }
 
 #[component]
 pub fn FormidableServerAction<F, T>(
-    #[prop(into)] label: &'static str,
+    #[prop(into)] label: TextProp,
     #[prop(into)] name: Name,
     #[prop(optional)] value: Option<T>,
     #[prop(optional)] callback: Option<Callback<F::Output, F::Error>>,
@@ -108,15 +129,18 @@ where
 
     view! {
         <form on:submit=on_submit>
-            {T::view(label, name, value, Some(form_callback)) }
+            {T::view(FieldConfiguration {
+                label,
+                description: None,
+            }, name, value, Some(form_callback)) }
             <button type="submit" disabled=submit_disabled>"Submit"</button>
             { move ||
                 if submit.pending().get() {
-                    Some(view! { <span class="info-message">"Submitting ..."</span> }.into_any())
+                    Some(view! { <p class="info-message">"Submitting ..."</p> }.into_any())
                 } else {
                     submit.value().get().map(|res| match res {
-                        Ok(_) => view! { <span class="success-message">"Form submitted successfully!"</span> }.into_any(),
-                        Err(err) => view! { <span class="error-message">{format!("{}", err)}</span> }.into_any(),
+                        Ok(_) => view! { <p class="success-message">"Form submitted successfully!"</p> }.into_any(),
+                        Err(err) => view! { <p class="error-message">{format!("{}", err)}</p> }.into_any(),
                     })
                 }
 

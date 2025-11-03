@@ -7,6 +7,9 @@ use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 
 use crate::app::form::ExampleForm;
 
+include!(concat!(env!("OUT_DIR"), "/i18n/mod.rs"));
+use i18n::*;
+
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
         <!DOCTYPE html>
@@ -31,6 +34,7 @@ pub fn App() -> impl IntoView {
     provide_meta_context();
 
     view! {
+        <I18nContextProvider>
         // injects a stylesheet into the document <head>
         // id=leptos means cargo-leptos will hot-reload this stylesheet
         <Stylesheet id="leptos" href="/pkg/formidable-example.css"/>
@@ -40,5 +44,6 @@ pub fn App() -> impl IntoView {
 
         // content for this welcome page
         <ExampleForm/>
+        </I18nContextProvider>
     }
 }

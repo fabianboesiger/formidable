@@ -3,6 +3,7 @@ use crate::{
     FieldError, Form, FormError, Name,
 };
 use derive_more::{Deref, Into};
+use icu_locale_core::Locale;
 use leptos::prelude::*;
 use std::fmt::Display;
 use std::str::FromStr;
@@ -10,17 +11,31 @@ use thiserror::Error;
 
 #[derive(Debug, Clone, PartialEq, Into, Deref)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Color(color::Rgba8);
+pub struct ClientLocale(Locale);
 
-impl Display for Color {
+impl Display for ClientLocale {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // Convert RGB to hex format for HTML color input
-        write!(f, "#{:02x}{:02x}{:02x}", self.0.r, self.0.g, self.0.b)
+        write!(f, "{}", self.0)
+    }
+}
+
+impl FromStr for ClientLocale {
+    type Err = LocaleError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let locale = s.parse()?;
+        Ok(ClientLocale(locale))
+    }
+}
+
+impl Default for ClientLocale {
+    fn default() -> Self {
+        ClientLocale(Locale::default())
     }
 }
 
 #[derive(Debug, Clone, Copy, Error, PartialEq, Eq, Hash)]
-pub enum ColorError {
+pub enum LocaleError {
     #[error("Invalid format")]
     InvalidFormat,
 }

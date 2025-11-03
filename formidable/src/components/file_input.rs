@@ -17,7 +17,8 @@ async fn read_file_as_bytes(
 
 #[component]
 pub fn FileInput(
-    #[prop(into)] label: &'static str,
+    #[prop(into)] label: TextProp,
+    #[prop(into, default = None)] description: Option<TextProp>,
     #[prop(into)] name: Name,
     #[prop(into)] value: Option<File>,
     #[prop(into)] callback: Option<Callback<Result<File, FieldError>>>,
@@ -77,7 +78,7 @@ pub fn FileInput(
 
     view! {
         <div class:error={move || touched.get() && current_file.get().is_err()} class="field file-input-field">
-            <label for=name.to_string()>{label}
+            <label for=name.to_string()>{label.get()}
                 <span class="custom custom-file-input"></span>
                 <input
                     node_ref=node_ref
@@ -97,9 +98,14 @@ pub fn FileInput(
             })}
             { move || {
                 touched.get().then(move || current_file.get().err().map(|e| {
-                    view! { <span class="error-message">{format!("{}", e)}</span> }
+                    view! { <p class="error-message">{format!("{}", e)}</p> }
                 }))
             }}
+            {
+                description.map(|desc| view! {
+                    <p class="description">{desc.get()}</p>
+                })
+            }
         </div>
     }
 }

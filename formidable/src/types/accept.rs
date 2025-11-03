@@ -31,15 +31,21 @@ impl TryFrom<bool> for Accept {
 
 impl Form for Accept {
     fn view(
-        label: &'static str,
+        field: crate::FieldConfiguration,
         name: Name,
         value: Option<Self>,
         callback: Option<Callback<Result<Self, FormError>>>,
     ) -> impl IntoView {
         view! {
-            <Checkbox<Accept> label=label name=name value=value callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
-                callback.run(v.map_err(FormError::from));
-            }))} />
+            <Checkbox<Accept>
+                label=field.label
+                description=field.description
+                name=name
+                value=value
+                callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
+                    callback.run(v.map_err(FormError::from));
+                }))}
+            />
         }
     }
 }

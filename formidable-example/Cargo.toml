@@ -19,9 +19,10 @@ time = "0.3"
 color = "0.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-formidable = { path = "../formidable", features = ["bigdecimal", "time", "color", "serde", "url", "file"] }
+formidable = { path = "../formidable", features = ["bigdecimal", "time", "color", "serde", "url", "file", "leptos_i18n"] }
 strum = { version = "0.27", features = ["derive"] }
 url = { version = "2.4" }
+leptos_i18n = { version = "0.6.0-rc.2" }
 
 [build-dependencies]
 leptos_i18n_build = { version = "0.6.0-rc.2" }
@@ -31,6 +32,8 @@ hydrate = [
     "leptos/hydrate",
     "dep:console_error_panic_hook",
     "dep:wasm-bindgen",
+    "leptos_i18n/hydrate",
+    "leptos_i18n_build/hydrate",
 ]
 ssr = [
     "dep:axum",
@@ -38,6 +41,8 @@ ssr = [
     "dep:leptos_axum",
     "leptos/ssr",
     "leptos_meta/ssr",
+    "leptos_i18n/axum",
+    "leptos_i18n/ssr",
 ]
 
 [package.metadata.leptos-i18n]
