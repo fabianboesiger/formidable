@@ -2,6 +2,11 @@
 name = "formidable"
 version = "0.1.0"
 edition = "2021"
+description = "Easily derive forms from structs for Leptos."
+keywords = ["leptos", "form", "derive"]
+authors = ["Fabian Bösiger <fabian.boesiger@outlook.com>"]
+repository = "https://github.com/fabianboesiger/formidable"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 leptos = { workspace = true }

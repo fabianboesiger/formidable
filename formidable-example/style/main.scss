@@ -1,3 +1,15 @@
+$primary-color: #ddd;
+$background-color: #f9f9f9;
+$text-color: #333;
+$success-color: #4caf50;
+$error-color: #f44336;
+
+$field-border-color: #bbb;
+$field-border-radius: 4px;
+$field-background-color: #fff;
+
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
 @mixin form-section {
 	display: block;
 	margin: 32px 0;
@@ -8,8 +20,10 @@
 }
 
 body {
-	font-family: sans-serif;
+	font-family: 'Open Sans', sans-serif;
 	font-size: 16px;
+	background-color: $background-color;
+	color: $text-color;
 }
 
 form {
@@ -44,8 +58,10 @@ select,
 button
 {
 	padding: 8px;
-	border-radius: 8px;
-	border: 1px solid #bbb;
+	border-radius: $field-border-radius;
+	border: 1px solid $field-border-color;
+	background: $field-background-color;
+	font-size: 'Open Sans', sans-serif;
 }
 
 input:not([type="checkbox"]):not([type="radio"]),
@@ -56,11 +72,8 @@ select
 	width: 100%;
 }
 
-button,
-select,
-input[type="color"]
-{
-	background-color: #ddd;
+button {
+	background-color: $primary-color;
 }
 
 legend {
@@ -85,14 +98,15 @@ fieldset {
 
 .message {
 	margin: 4px 0;
+	font-size: 12px;
 }
 
 .error-message {
-	color: red;
+	color: $error-color;
 }
 
 .success-message {
-	color: green;
+	color: $success-color;
 }
 
 .custom {
