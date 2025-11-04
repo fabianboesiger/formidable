@@ -58,7 +58,7 @@ async fn handle_submit(user_form: FormData) -> Result<(), ServerFnError> {
     - Supports dynamically repeating elements via `Vec`
 - Supports i18n support via `leptos_i18n`
 
-## Adding Custom Types
+## Adding Custom Types
 
 Formidable uses a type-based validation approach. Types provide the validation mechanism which are then enforced in the form inputs. You can easily extend the system using the `FromStr` and `FormType` traits.
 
