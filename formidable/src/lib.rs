@@ -8,9 +8,9 @@ pub mod types;
 pub use error::*;
 pub use name::*;
 
+use derive_more::Display;
 pub use formidable_derive::Form;
 use std::{fmt::Display, marker::PhantomData, sync::Arc};
-use strum::Display;
 
 use leptos::{ev::SubmitEvent, prelude::*, server_fn::ServerFn};
 
@@ -177,16 +177,16 @@ pub(crate) fn t<T: Display + Clone + 'static>(text: T) -> String {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Display)]
 pub enum FormMessage {
-    #[strum(to_string = "Submit")]
+    #[display("Submit")]
     SubmitButton,
-    #[strum(to_string = "Add")]
+    #[display("Add")]
     AddButton,
-    #[strum(to_string = "Remove")]
+    #[display("Remove")]
     RemoveButton,
-    #[strum(to_string = "Submitting ...")]
+    #[display("Submitting ...")]
     SubmitPendingMessage,
-    #[strum(to_string = "Form submitted successfully")]
+    #[display("Form submitted successfully")]
     SubmitSuccessMessage,
-    #[strum(to_string = "Error submitting form")]
+    #[display("Error submitting form")]
     SubmitErrorMessage,
 }
