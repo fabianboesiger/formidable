@@ -10,31 +10,29 @@ pub fn my_proc_macro(input: TokenStream) -> TokenStream {
     impl_form_macro(&ast)
 }
 
-// Helper function to create TextProp signal from expression (for top-level generation)
-fn create_textprop_from_expr(expr: &Expr) -> proc_macro2::TokenStream {
+// Helper function to create String from expression (for top-level generation)
+fn create_string_from_expr(expr: &Expr) -> proc_macro2::TokenStream {
     match expr {
-        // String literals: create simple TextProp signal
         Expr::Lit(expr_lit) => {
             if let Lit::Str(_) = &expr_lit.lit {
                 quote! {
-                    leptos::prelude::TextProp::from(#expr)
+                    String::from(#expr)
                 }
             } else {
-                panic!("Only string literals are supported for textprop");
+                panic!("Only string literals are supported");
             }
         },
-        // i18n expressions (paths): create reactive TextProp signal
+        #[cfg(feature = "leptos_i18n")]
         Expr::Path(_) => {
             quote! {
-                leptos::prelude::TextProp::from(move || -> leptos::prelude::Oco<'static, str> {
+                {
                     let i18n = crate::app::i18n::use_i18n();
-                    leptos_i18n::tu_string!(i18n, #expr).into()
-                })
+                    String::from(leptos_i18n::tu_string!(i18n, #expr))
+                }
             }
         },
-        // Other expressions: create simple TextProp signal
         _ => {
-            panic!("Only string literals and i18n paths are supported for textprop");
+            panic!("Only string literals and i18n paths are supported");
         }
     }
 }
@@ -99,21 +97,28 @@ impl FieldConfigurationParser {
     }
     
 
-    fn to_field_configuration(&self) -> proc_macro2::TokenStream {        
-        let label = create_textprop_from_expr(self.label.as_ref().expect("Label is required"));
+    fn to_field_configuration(&self) -> proc_macro2::TokenStream {       
+        let label =  create_string_from_expr(self.label.as_ref().expect("Label is required"));
+        let label = quote! { leptos::prelude::TextProp::from(#label) };
+
         let description = if let Some(desc_expr) = &self.description {
-            let description = create_textprop_from_expr(desc_expr);
-            quote! { Some(#description) }
+            let description = create_string_from_expr(desc_expr);
+            quote! { Some(leptos::prelude::TextProp::from(#description)) }
         } else {
             quote! { None }
         };
 
         quote! {
             formidable::FieldConfiguration {
-                label: #label,
+                label: Some(#label),
                 description: #description,
             }
         }
+    }
+
+    fn label_string(&self) -> proc_macro2::TokenStream {
+        let label = self.label.as_ref().expect("Label is required");
+        create_string_from_expr(label)
     }
 }
 
@@ -396,10 +401,9 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum) -> TokenStre
                         let field_configuration = #field_configuration;
                         
                         view! {
-                            <fieldset>
-                                <legend>{#field_configuration.label.get()}</legend>
+                            <formidable::components::Section name=name heading={field_configuration.label.clone()}>
                                 #(#field_forms)*
-                            </fieldset>
+                            </formidable::components::Section>
                         }.into_any()
                     }
                 }
@@ -411,11 +415,10 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum) -> TokenStre
     let discriminant_value_label_match_arms: Vec<_> = variants.iter().map(|variant| {
         let variant_name = &variant.ident;
         let form_config = FieldConfigurationParser::parse_from_attributes(&variant.attrs);
-        let field_configuration = form_config.to_field_configuration();
+        let label_string = form_config.label_string();
         
         quote! { #discriminant_name::#variant_name => {
-            let field_configuration = #field_configuration;
-            field_configuration.label.clone()
+            write!(f, "{}", #label_string)
         } }
     }).collect();
     
@@ -446,15 +449,14 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum) -> TokenStre
                 }).unwrap_or_default();
                 
                 let selected_discriminant = RwSignal::new(current_discriminant);
-                
-                // Handle variant changes - when discriminant changes, trigger the appropriate form
-                // The individual variant forms will handle calling the callback with the appropriate values
 
-                let discriminant_value_label = move |v: &#discriminant_name| {
-                    match v {
-                        #(#discriminant_value_label_match_arms)*
+                impl std::fmt::Display for #discriminant_name {
+                    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        match self {
+                            #(#discriminant_value_label_match_arms)*
+                        }
                     }
-                };
+                }
                 
                 view! {
                     <div>
@@ -462,15 +464,15 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum) -> TokenStre
                         <div class="variant-selector">
                             {
                                 if #discriminant_name::VARIANTS.len() > 5 {
-                                    view! { <components::Select label=field.label name=name.push_key("variant") value=selected_discriminant value_label=discriminant_value_label /> }.into_any()
+                                    view! { <components::Select label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant /> }.into_any()
                                 } else {
-                                    view! { <components::Radio label=field.label name=name.push_key("variant") value=selected_discriminant value_label=discriminant_value_label /> }.into_any()
+                                    view! { <components::Radio label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant /> }.into_any()
                                 }
                             }
                         </div>
                         
                         // Variant-specific form
-                        <div class="variant-form">
+                        <div class="variant">
                             {move || {
                                 match selected_discriminant.get() {
                                     #(#variant_forms)*
@@ -523,15 +525,14 @@ fn impl_form_for_struct(name: &syn::Ident, data_struct: &syn::DataStruct) -> Tok
                 #callback_effect
 
                 view! {
-                    <fieldset>
-                        <legend>{field.label.get()}</legend>
+                    <formidable::components::Section name=name heading={field.label}>
                         {
                             field.description.clone().map(|desc| view! {
                                 <p class="description">{desc.get()}</p>
                             })
                         }
                         #(#field_forms)*
-                    </fieldset>
+                    </formidable::components::Section>
                 }.into_any()
             }
         }

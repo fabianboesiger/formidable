@@ -1,6 +1,9 @@
 use leptos::prelude::*;
 
-use crate::{FieldError, Name};
+use crate::{
+    components::{Description, ErrorMessage},
+    FieldError, Name,
+};
 use std::fmt::Display;
 
 pub use formidable_derive::Form;
@@ -56,12 +59,8 @@ where
                 />
                 {label.get()}
             </label>
-            { move || touched.get().then(move || value.get().err().map(|e| view! { <p class="error-message">{format!("{}", e)}</p> })) }
-            {
-                description.map(|desc| view! {
-                    <p class="description">{desc.get()}</p>
-                })
-            }
+            <ErrorMessage touched={touched} value={value} />
+            <Description description={description} />
         </div>
     }
 }

@@ -3,7 +3,6 @@
 mod accept;
 #[cfg(feature = "bigdecimal")]
 mod bigdecimal;
-//mod client_metadata;
 #[cfg(feature = "color")]
 mod color;
 mod email;
@@ -21,7 +20,6 @@ mod url;
 pub use accept::*;
 #[cfg(feature = "bigdecimal")]
 pub use bigdecimal::*;
-//pub use client_metadata::*;
 #[cfg(feature = "color")]
 pub use color::*;
 pub use email::*;
@@ -56,7 +54,7 @@ where
     ) -> impl IntoView {
         view! {
             <Input<T>
-                label=field.label
+                label=field.label.expect("No label provided")
                 description=field.description
                 name=name
                 value=value

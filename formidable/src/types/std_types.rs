@@ -1,7 +1,8 @@
 use crate::{
-    components::{Checkbox, InputType},
+    components::{Checkbox, InputType, Section},
+    t,
     types::FormType,
-    FieldError, Form, FormError, Name,
+    FieldError, Form, FormError, FormMessage, Name,
 };
 use leptos::prelude::*;
 use uuid::Uuid;
@@ -50,7 +51,7 @@ impl Form for bool {
     ) -> impl IntoView {
         view! {
             <Checkbox<bool>
-                label=field.label
+                label=field.label.expect("No label provided")
                 description=field.description
                 name=name
                 value=value
@@ -130,8 +131,7 @@ where
         }
 
         view! {
-            <fieldset class="array">
-                <legend>{field.label.get()}</legend>
+            <Section name=name heading={field.label.expect("No label provided").clone()}>
                 <For
                     each={move || children.get().into_iter().enumerate()}
                     key={move |(_, child)| child.id}
@@ -140,7 +140,7 @@ where
                         view! {
                             <div class={format!("array-item item-{}", child.id)}>
                                 {T::view(crate::FieldConfiguration {
-                                    label: field.label.clone(),
+                                    label: None,
                                     description: None,
                                 }, name.push_index(index), child.value.and_then(|v| v.ok()), Some(Callback::new(move |v: Result<T, FormError>| {
                                     let mut children = children.write();
@@ -150,25 +150,27 @@ where
                                 })))}
                                 <button
                                     type="button"
+                                    class="array-remove-button"
                                     on:click={move |_| {
                                         children.update(move |children| {
                                             children.retain(|c| c.id != child.id);
                                         });
                                     }}
-                                >"Remove Item"</button>
+                                >{t(FormMessage::RemoveButton)}</button>
                             </div>
                         }
                     }}
                 />
                 <button
                     type="button"
+                    class="array-add-button"
                     on:click={move |_| {
                         children.update(move |children| {
                             children.push(Child::new());
                         });
                     }}
-                >"Add Item"</button>
-            </fieldset>
+                >{t(FormMessage::AddButton)}</button>
+            </Section>
         }
     }
 }

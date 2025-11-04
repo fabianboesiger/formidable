@@ -6,19 +6,18 @@ mod name;
 pub mod types;
 
 pub use error::*;
-use icu_locale_core::Locale;
 pub use name::*;
 
 pub use formidable_derive::Form;
-use std::{fmt::Display, marker::PhantomData};
-use time::UtcOffset;
+use std::{fmt::Display, marker::PhantomData, sync::Arc};
+use strum::Display;
 
 use leptos::{ev::SubmitEvent, prelude::*, server_fn::ServerFn};
 
 use std::fmt::Debug;
 
 pub struct FieldConfiguration {
-    pub label: TextProp,
+    pub label: Option<TextProp>,
     pub description: Option<TextProp>,
 }
 
@@ -43,7 +42,7 @@ where
 {
     T::view(
         FieldConfiguration {
-            label,
+            label: Some(label),
             description: None,
         },
         name,
@@ -53,7 +52,7 @@ where
 }
 
 #[component]
-pub fn FormidableSignal<T>(
+pub fn FormidableRwSignal<T>(
     #[prop(into)] label: TextProp,
     #[prop(into)] name: Name,
     #[prop(into)] value: RwSignal<T>,
@@ -69,7 +68,7 @@ where
 
     T::view(
         FieldConfiguration {
-            label,
+            label: Some(label),
             description: None,
         },
         name,
@@ -130,21 +129,64 @@ where
     view! {
         <form on:submit=on_submit>
             {T::view(FieldConfiguration {
-                label,
+                label: Some(label),
                 description: None,
             }, name, value, Some(form_callback)) }
-            <button type="submit" disabled=submit_disabled>"Submit"</button>
+            <button type="submit" disabled=submit_disabled>{t(FormMessage::SubmitButton)}</button>
             { move ||
                 if submit.pending().get() {
-                    Some(view! { <p class="info-message">"Submitting ..."</p> }.into_any())
+                    Some(view! { <p class="message info-message">{t(FormMessage::SubmitPendingMessage)}</p> }.into_any())
                 } else {
                     submit.value().get().map(|res| match res {
-                        Ok(_) => view! { <p class="success-message">"Form submitted successfully!"</p> }.into_any(),
-                        Err(err) => view! { <p class="error-message">{format!("{}", err)}</p> }.into_any(),
+                        Ok(_) => view! { <p class="message success-message">{t(FormMessage::SubmitSuccessMessage)}</p> }.into_any(),
+                        Err(_err) => view! { <p class="message error-message">{t(FormMessage::SubmitErrorMessage)}</p> }.into_any(),
                     })
                 }
 
             }
         </form>
     }
+}
+
+#[derive(Clone)]
+pub struct Translation<T>(Arc<dyn Fn(T) -> String>);
+
+impl<T, F> From<F> for Translation<T>
+where
+    F: Fn(T) -> String + 'static,
+{
+    fn from(f: F) -> Self {
+        Translation(Arc::new(f))
+    }
+}
+
+impl<T> Translation<T> {
+    pub fn apply(&self, text: T) -> String {
+        (self.0)(text)
+    }
+}
+
+pub(crate) fn t<T: Display + Clone + 'static>(text: T) -> String {
+    let translation = use_context::<Translation<T>>();
+    if let Some(translation) = translation {
+        translation.apply(text)
+    } else {
+        format!("{}", text)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Display)]
+pub enum FormMessage {
+    #[strum(to_string = "Submit")]
+    SubmitButton,
+    #[strum(to_string = "Add")]
+    AddButton,
+    #[strum(to_string = "Remove")]
+    RemoveButton,
+    #[strum(to_string = "Submitting ...")]
+    SubmitPendingMessage,
+    #[strum(to_string = "Form submitted successfully")]
+    SubmitSuccessMessage,
+    #[strum(to_string = "Error submitting form")]
+    SubmitErrorMessage,
 }

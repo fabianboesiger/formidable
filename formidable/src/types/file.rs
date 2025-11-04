@@ -63,7 +63,7 @@ impl Form for File {
     ) -> impl IntoView {
         view! {
             <FileInput
-                label=field.label
+                label=field.label.expect("No label provided")
                 description=field.description
                 name=name
                 value=value

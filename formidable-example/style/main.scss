@@ -1,3 +1,12 @@
+@mixin form-section {
+	display: block;
+	margin: 32px 0;
+}
+
+@mixin form-element {
+	margin: 8px 0;
+}
+
 body {
 	font-family: sans-serif;
 	font-size: 16px;
@@ -8,6 +17,27 @@ form {
 	max-width: 512px;
 	margin: auto;
 }
+
+.form-section {
+	@include form-section;
+
+	h1, h2, h3, h4, h5, h6 {
+		margin-bottom: 0;
+	}
+
+	.description {
+		margin-top: 0;
+	}
+}
+
+.array-item {
+	@include form-section;
+
+	> .form-section {
+		margin: 0;
+	}
+}
+
 
 input:not([type="checkbox"]):not([type="radio"]),
 select,
@@ -26,9 +56,11 @@ select
 	width: 100%;
 }
 
-button {
+button,
+select,
+input[type="color"]
+{
 	background-color: #ddd;
-	cursor: pointer;
 }
 
 legend {
@@ -39,8 +71,6 @@ legend {
 }
 
 fieldset {
-	display: block;
-	margin: 16px 0;
 	padding: 0;
 	border: none;
 }
@@ -50,26 +80,19 @@ fieldset {
 }
 
 .field {
-	margin: 4px 0;
+	@include form-element;
 }
 
-.description {
-	font-size: 12px;
+.message {
 	margin: 4px 0;
 }
 
 .error-message {
 	color: red;
-	font-size: 12px;
 }
 
 .success-message {
 	color: green;
-	font-size: 12px;
-}
-
-.info-message {
-	font-size: 12px;
 }
 
 .custom {

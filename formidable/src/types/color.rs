@@ -65,7 +65,7 @@ impl Form for Color {
     ) -> impl IntoView {
         view! {
             <Input<Color>
-                label=field.label
+                label=field.label.expect("No label provided")
                 description=field.description
                 name=name
                 value=value

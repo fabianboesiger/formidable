@@ -1,5 +1,6 @@
 use leptos::prelude::*;
 
+use crate::components::{Description, ErrorMessage};
 use crate::{FieldError, Name};
 use std::fmt::Display;
 use std::str::FromStr;
@@ -107,16 +108,8 @@ where
                     ().into_any()
                 }
             }
-            { move || {
-                touched.get().then(move || value.get().err().map(|e| {
-                    view! { <p class="error-message">{format!("{}", e)}</p> }
-                }))
-            }}
-            {
-                description.map(|desc| view! {
-                    <p class="description">{desc.get()}</p>
-                })
-            }
+            <ErrorMessage touched={touched} value={value} />
+            <Description description={description} />
         </div>
     }
 }

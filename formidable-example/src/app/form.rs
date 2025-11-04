@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 
 use formidable::{
-    types::{Accept, Color, Date, Email, File, Optional, Tel},
+    types::{Accept, Color, Date, Email, File, NonEmptyString, Optional, Tel},
     Form, FormidableServerAction,
 };
 use leptos::server_fn::codec::Json;
@@ -9,35 +9,27 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use url::Url;
 
-use crate::app::i18n::*;
-
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize)]
-struct UserForm {
+struct FormData {
     #[form(
         label = personal_information,
         description = "Please provide your personal details."
     )]
     personal_info: PersonalInfo,
-    #[form(
-        label = contact_information,
-    )]
+    #[form(label = "Contact Information")]
     contact_info: ContactInfo,
-    #[form(label = "Addresses")]
-    addresses: Vec<Address>,
-    #[form(label = user_type)]
-    user_type: UserType,
-    #[form(label = "Account Balance")]
-    account_balance: bigdecimal::BigDecimal,
-    #[form(label = "Accept Terms")]
-    accept_terms: Accept,
-    #[form(label = "Payment Method")]
-    payment_method: PaymentMethod,
+    #[form(label = "Order")]
+    order: Vec<Item>,
+    #[form(label = "Payment Information")]
+    payment_info: Payment,
+    #[form(label = "I accept the terms and conditions")]
+    terms_and_conditions: Accept,
 }
 
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize)]
 struct PersonalInfo {
     #[form(label = "Full Name")]
-    name: String,
+    name: NonEmptyString,
     #[form(label = "Date of Birth")]
     date_of_birth: Date,
     #[form(label = "Eye Color")]
@@ -48,6 +40,8 @@ struct PersonalInfo {
 
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize)]
 struct ContactInfo {
+    #[form(label = "Address")]
+    address: Address,
     #[form(label = "Email Address")]
     email: Email,
     #[form(label = "Phone Number")]
@@ -70,18 +64,25 @@ struct Address {
     country: Country,
 }
 
-#[derive(Form, Clone, Copy, Debug, PartialEq, Default, Serialize, Deserialize)]
-enum UserType {
-    #[form(label = "Admin")]
-    Admin,
-    #[form(label = regular_user)]
-    #[default]
-    Regular,
+#[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize)]
+struct Item {
+    #[form(label = "Item Name")]
+    name: String,
+    #[form(label = "Item ID")]
+    id: u32,
+}
+
+#[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize)]
+struct Payment {
+    #[form(label = "Total")]
+    total: bigdecimal::BigDecimal,
+    #[form(label = "Payment Method")]
+    payment_method: PaymentMethod,
 }
 
 #[derive(Form, Clone, Copy, Debug, PartialEq, Default, Serialize, Deserialize)]
 enum Country {
-    #[form(label = switzerland)]
+    #[form(label = "Switzerland")]
     #[default]
     Switzerland,
     #[form(label = "Germany")]
@@ -99,7 +100,7 @@ enum Country {
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 enum PaymentMethod {
     #[form(label = "Credit Card")]
-    CreditCard(String), // Card number as a single unnamed field
+    CreditCard(String),
     #[form(label = "Bank Transfer")]
     BankTransfer {
         #[form(label = "Account Number")]
@@ -107,26 +108,15 @@ enum PaymentMethod {
         #[form(label = "Routing Number")]
         routing_number: String,
     },
-    #[form(label = "Cash")]
     #[default]
+    #[form(label = "Cash")]
     Cash,
 }
 
 #[component]
 pub fn ExampleForm() -> impl IntoView {
-    let i18n = use_i18n();
-
-    let on_switch = move |_| {
-        let new_locale = match i18n.get_locale() {
-            Locale::en => Locale::de,
-            Locale::de => Locale::en,
-        };
-        i18n.set_locale(new_locale);
-    };
-
     view! {
-        <button on:click=on_switch>{t!(i18n, personal_information)}</button>
-        <FormidableServerAction<HandleUserForm, UserForm> label="Example Form" name="user_form" />
+        <FormidableServerAction<HandleSubmit, FormData> label="Example Form" name="user_form" />
     }
 }
 
@@ -134,7 +124,7 @@ pub fn ExampleForm() -> impl IntoView {
   input = Json,
   output = Json
 )]
-async fn handle_user_form(user_form: UserForm) -> Result<(), ServerFnError> {
+async fn handle_submit(user_form: FormData) -> Result<(), ServerFnError> {
     leptos::logging::log!("Received form submission: {:?}", user_form);
     Ok(())
 }

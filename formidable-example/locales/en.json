@@ -1,8 +1,3 @@
 {
-  "hello": "Hello",
-  "personal_information": "Personal Information",
-  "contact_information": "Contact Information",
-  "switzerland": "Switzerland",
-  "regular_user": "Regular User",
-  "user_type": "User Type"
+  "personal_information": "Personal Information"
 }

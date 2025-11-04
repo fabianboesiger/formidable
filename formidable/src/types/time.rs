@@ -47,7 +47,7 @@ impl Form for Date {
     ) -> impl IntoView {
         view! {
             <Input<Date>
-                label=field.label
+                label=field.label.expect("No label provided")
                 description=field.description
                 name=name
                 value=value
@@ -99,7 +99,7 @@ impl Form for PrimitiveDateTime {
     ) -> impl IntoView {
         view! {
             <Input<PrimitiveDateTime>
-                label=field.label
+                label=field.label.expect("No label provided")
                 description=field.description
                 name=name
                 value=value
@@ -151,7 +151,7 @@ impl Form for Time {
     ) -> impl IntoView {
         view! {
             <Input<Time>
-                label=field.label
+                label=field.label.expect("No label provided")
                 description=field.description
                 name=name
                 value=value

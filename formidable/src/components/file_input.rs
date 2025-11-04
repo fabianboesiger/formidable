@@ -1,6 +1,7 @@
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 
+use crate::components::{Description, ErrorMessage};
 use crate::types::FileError;
 use crate::{types::File, FieldError, Name};
 use leptos::wasm_bindgen::JsCast;
@@ -96,16 +97,8 @@ pub fn FileInput(
                     { format!("{}", file) }
                 </span>
             })}
-            { move || {
-                touched.get().then(move || current_file.get().err().map(|e| {
-                    view! { <p class="error-message">{format!("{}", e)}</p> }
-                }))
-            }}
-            {
-                description.map(|desc| view! {
-                    <p class="description">{desc.get()}</p>
-                })
-            }
+            <ErrorMessage touched={touched} value={current_file} />
+            <Description description={description} />
         </div>
     }
 }

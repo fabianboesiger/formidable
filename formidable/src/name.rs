@@ -8,6 +8,10 @@ impl Name {
         self.0.iter().take_while(|part| part.is_some()).count()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn push(mut self, part: NamePart) -> Self {
         let len = self.len();
         if len < self.0.len() {
