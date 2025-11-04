@@ -57,6 +57,7 @@ async fn handle_submit(user_form: FormData) -> Result<(), ServerFnError> {
     - Provides further types for email, phone number, non empty strings
     - Supports dynamically repeating elements via `Vec`
 - Supports i18n support via `leptos_i18n`
+- Send your data to the server directly via server actions, or get your data via callbacks
 
 ## Adding Custom Types
 
