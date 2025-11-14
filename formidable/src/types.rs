@@ -69,6 +69,7 @@ where
                 min=T::MIN
                 max=T::MAX
                 step=T::STEP
+                class=field.class
             />
         }
     }

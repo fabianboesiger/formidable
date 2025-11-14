@@ -11,6 +11,7 @@ pub fn Select<T>(
     #[prop(into, default = None)] description: Option<TextProp>,
     name: Name,
     value: RwSignal<T>,
+    #[prop(into, default = None)] class: Option<String>,
     //value_label: impl Fn(&T) -> TextProp + 'static,
 ) -> impl IntoView
 where
@@ -25,7 +26,7 @@ where
         + 'static,
 {
     view! {
-        <div class="field select-field">
+        <div class={format!("field select-field{}", class.as_ref().map(|c| format!(" {}", c)).unwrap_or_default())}>
             <label for=name.to_string()>{label.get()}</label>
             <select
                 name=name.to_string()

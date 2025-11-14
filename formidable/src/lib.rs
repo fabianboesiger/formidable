@@ -21,6 +21,7 @@ pub use strum;
 pub struct FieldConfiguration {
     pub label: Option<TextProp>,
     pub description: Option<TextProp>,
+    pub class: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -86,6 +87,7 @@ where
         FieldConfiguration {
             label: Some(label),
             description,
+            class: None,
         },
         name,
         value,
@@ -116,6 +118,7 @@ where
         FieldConfiguration {
             label: Some(label),
             description,
+            class: None,
         },
         name,
         Some(value.get_untracked()),
@@ -181,6 +184,7 @@ where
             {T::view(FieldConfiguration {
                 label: Some(label),
                 description,
+                class: None,
             }, name, value, Some(form_callback)) }
             <button type="submit" disabled=submit_disabled>{t(FormMessage::SubmitButton)}</button>
             { move ||

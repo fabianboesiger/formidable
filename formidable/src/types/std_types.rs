@@ -58,6 +58,7 @@ impl Form for bool {
                 callback={callback.map(|callback| Callback::new(move |v: Result<Self, FieldError>| {
                     callback.run(v.map_err(FormError::from));
                 }))}
+                class=field.class
             />
         }
     }
@@ -142,6 +143,7 @@ where
                                 {T::view(crate::FieldConfiguration {
                                     label: None,
                                     description: None,
+                                    class: None,
                                 }, name.push_index(index), child.value.and_then(|v| v.ok()), Some(Callback::new(move |v: Result<T, FormError>| {
                                     let mut children = children.write();
                                     if let Some(pos) = children.iter().position(|c| c.id == child.id) {

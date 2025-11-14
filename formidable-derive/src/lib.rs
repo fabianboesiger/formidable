@@ -43,6 +43,7 @@ struct FieldConfigurationParser {
     label: Option<Expr>,
     description: Option<Expr>,
     variant_selection: Option<String>,
+    class: Option<String>,
 }
 
 impl FieldConfigurationParser {
@@ -83,6 +84,13 @@ impl FieldConfigurationParser {
                                             }
                                         }
                                     },
+                                    "class" => {
+                                        if let Expr::Lit(expr_lit) = &value {
+                                            if let Lit::Str(lit_str) = &expr_lit.lit {
+                                                config.class = Some(lit_str.value());
+                                            }
+                                        }
+                                    },
                                     _ => {} // Ignore unknown attributes
                                 }
                             }
@@ -98,6 +106,12 @@ impl FieldConfigurationParser {
                             if let Expr::Lit(expr_lit) = value {
                                 if let Lit::Str(lit_str) = &expr_lit.lit {
                                     config.variant_selection = Some(lit_str.value());
+                                }
+                            }
+                        } else if path.is_ident("class") {
+                            if let Expr::Lit(expr_lit) = value {
+                                if let Lit::Str(lit_str) = &expr_lit.lit {
+                                    config.class = Some(lit_str.value());
                                 }
                             }
                         }
@@ -122,10 +136,17 @@ impl FieldConfigurationParser {
             quote! { None }
         };
 
+        let class = if let Some(class_str) = &self.class {
+            quote! { Some(String::from(#class_str)) }
+        } else {
+            quote! { None }
+        };
+
         quote! {
             formidable::FieldConfiguration {
                 label: Some(#label),
                 description: #description,
+                class: #class,
             }
         }
     }
@@ -294,7 +315,7 @@ fn impl_form_macro(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
 
     match &ast.data {
-        syn::Data::Struct(data_struct) => impl_form_for_struct(name, data_struct),
+        syn::Data::Struct(data_struct) => impl_form_for_struct(name, data_struct, ast),
         syn::Data::Enum(data_enum) => impl_form_for_enum(name, data_enum, ast),
         _ => panic!("Form can only be derived for structs and enums"),
     }
@@ -436,18 +457,23 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum, ast: &syn::D
         } }
     }).collect();
     
-    // Parse enum attributes to determine variant selection type
+    // Parse enum attributes to determine variant selection type and class
     let enum_config = FieldConfigurationParser::parse_from_attributes(&ast.attrs);
-    let variant_selection_type = enum_config.variant_selection.as_deref().unwrap_or("select");
+    let variant_selection_type = enum_config.variant_selection.as_deref().unwrap_or("radio");
+    let enum_class = if let Some(class_str) = &enum_config.class {
+        format!("enum {}", class_str)
+    } else {
+        "enum".to_string()
+    };
 
     // Generate the variant selector component at compile time
     let variant_selector = if variant_selection_type == "select" {
         quote! {
-            view! { <components::Select label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant /> }.into_any()
+            view! { <components::Select label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant class=field.class /> }.into_any()
         }
     } else if variant_selection_type == "radio" {
         quote! {
-            view! { <components::Radio label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant /> }.into_any()
+            view! { <components::Radio label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant class=field.class /> }.into_any()
         }
     } else {
         panic!("Unsupported variant selection type: {}", variant_selection_type);
@@ -489,14 +515,14 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum, ast: &syn::D
                 }
                 
                 view! {
-                    <div>
+                    <div class={#enum_class}>
                         // Variant selector
-                        <div class="variant-selector">
+                        <div class="enum-variant-selector">
                             { #variant_selector }
                         </div>
                         
                         // Variant-specific form
-                        <div class="variant">
+                        <div class="enum-variant">
                             {move || {
                                 match selected_discriminant.get() {
                                     #(#variant_forms)*
@@ -512,11 +538,19 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum, ast: &syn::D
     generated.into()
 }
 
-fn impl_form_for_struct(name: &syn::Ident, data_struct: &syn::DataStruct) -> TokenStream {
+fn impl_form_for_struct(name: &syn::Ident, data_struct: &syn::DataStruct, ast: &syn::DeriveInput) -> TokenStream {
     // Parse the struct data
     let fields = match &data_struct.fields {
         syn::Fields::Named(fields_named) => &fields_named.named,
         _ => panic!("Form can only be derived for structs with named fields"),
+    };
+
+    // Parse struct attributes to get class
+    let struct_config = FieldConfigurationParser::parse_from_attributes(&ast.attrs);
+    let struct_class = if let Some(class_str) = &struct_config.class {
+        quote! { Some(String::from(#class_str)) }
+    } else {
+        quote! { None }
     };
 
     // Use shared field processing logic
@@ -549,7 +583,7 @@ fn impl_form_for_struct(name: &syn::Ident, data_struct: &syn::DataStruct) -> Tok
                 #callback_effect
 
                 view! {
-                    <formidable::components::Section name=name heading={field.label}>
+                    <formidable::components::Section name=name heading={field.label} class=#struct_class>
                         {
                             field.description.clone().map(|desc| view! {
                                 <p class="description">{desc.get()}</p>

@@ -6,12 +6,13 @@ use crate::{name::Name, FormConfiguration};
 pub fn Section(
     #[prop(into)] name: Name,
     #[prop(into, default = None)] heading: Option<TextProp>,
+    #[prop(into, default = None)] class: Option<String>,
     children: Children,
 ) -> impl IntoView {
     let form_configuration = use_context::<FormConfiguration>().unwrap_or_default();
 
     view! {
-        <div class="form-section" id=name.to_string()>
+        <div class={format!("form-section{}", class.as_ref().map(|c| format!(" {}", c)).unwrap_or_default())} id=name.to_string()>
             <div class="form-section-heading">
             {
                 heading.map(|heading| {

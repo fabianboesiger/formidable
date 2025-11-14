@@ -11,6 +11,7 @@ pub fn Radio<T>(
     #[prop(into, default = None)] description: Option<TextProp>,
     name: Name,
     value: RwSignal<T>,
+    #[prop(into, default = None)] class: Option<String>,
     //value_label: impl Fn(&T) -> TextProp + 'static,
 ) -> impl IntoView
 where
@@ -25,7 +26,7 @@ where
         + 'static,
 {
     view! {
-        <div class="field radio-group-field">
+        <div class={format!("field radio-group-field{}", class.as_ref().map(|c| format!(" {}", c)).unwrap_or_default())}>
             <fieldset>
                 <legend>{label.get()}</legend>
                 { <T as VariantArray>::VARIANTS.iter().map(move |&option| {
