@@ -121,6 +121,7 @@ pub fn ExampleForm() -> impl IntoView {
     view! {
         <FormidableServerAction<HandleSubmit, FormData>
             label="Example Form"
+            description="An example form demonstrating various field types and configurations."
             name="user_form"
             form_configuration=FormConfiguration {
                 section_label: SectionHeading::LeveledHeading(formidable::HeadingLevel::H2),

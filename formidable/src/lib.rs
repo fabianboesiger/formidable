@@ -72,7 +72,7 @@ pub trait Form: Sized + Send + Sync + 'static {
 #[component]
 pub fn FormidableCallback<T>(
     #[prop(into)] label: TextProp,
-    #[prop(into, default = None)] description: Option<TextProp>,
+    #[prop(into, optional)] description: Option<TextProp>,
     #[prop(into, optional)] form_configuration: FormConfiguration,
     #[prop(into)] name: Name,
     #[prop(optional)] value: Option<T>,
@@ -98,7 +98,7 @@ where
 #[component]
 pub fn FormidableRwSignal<T>(
     #[prop(into)] label: TextProp,
-    #[prop(into, default = None)] description: Option<TextProp>,
+    #[prop(into, optional)] description: Option<TextProp>,
     #[prop(into, optional)] form_configuration: FormConfiguration,
     #[prop(into)] name: Name,
     #[prop(into)] value: RwSignal<T>,
@@ -129,7 +129,7 @@ where
 #[component]
 pub fn FormidableServerAction<F, T>(
     #[prop(into)] label: TextProp,
-    #[prop(into, default = None)] description: Option<TextProp>,
+    #[prop(into, optional)] description: Option<TextProp>,
     #[prop(into, optional)] form_configuration: FormConfiguration,
     #[prop(into)] name: Name,
     #[prop(optional)] value: Option<T>,
