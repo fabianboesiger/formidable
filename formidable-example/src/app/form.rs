@@ -98,6 +98,7 @@ enum Country {
 }
 
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[form(variant_selection = "radio")]
 enum PaymentMethod {
     #[form(label = "Credit Card")]
     CreditCard(String),

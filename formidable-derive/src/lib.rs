@@ -42,6 +42,7 @@ fn create_string_from_expr(expr: &Expr) -> proc_macro2::TokenStream {
 struct FieldConfigurationParser {
     label: Option<Expr>,
     description: Option<Expr>,
+    variant_selection: Option<String>,
 }
 
 impl FieldConfigurationParser {
@@ -75,6 +76,13 @@ impl FieldConfigurationParser {
                                 match name.to_string().as_str() {
                                     "label" => config.label = Some(value),
                                     "description" => config.description = Some(value),
+                                    "variant_selection" => {
+                                        if let Expr::Lit(expr_lit) = &value {
+                                            if let Lit::Str(lit_str) = &expr_lit.lit {
+                                                config.variant_selection = Some(lit_str.value());
+                                            }
+                                        }
+                                    },
                                     _ => {} // Ignore unknown attributes
                                 }
                             }
@@ -86,6 +94,12 @@ impl FieldConfigurationParser {
                             config.label = Some(value.clone());
                         } else if path.is_ident("description") {
                             config.description = Some(value.clone());
+                        } else if path.is_ident("variant_selection") {
+                            if let Expr::Lit(expr_lit) = value {
+                                if let Lit::Str(lit_str) = &expr_lit.lit {
+                                    config.variant_selection = Some(lit_str.value());
+                                }
+                            }
                         }
                     },
                     _ => {} // Ignore other meta types
@@ -281,12 +295,12 @@ fn impl_form_macro(ast: &syn::DeriveInput) -> TokenStream {
 
     match &ast.data {
         syn::Data::Struct(data_struct) => impl_form_for_struct(name, data_struct),
-        syn::Data::Enum(data_enum) => impl_form_for_enum(name, data_enum),
+        syn::Data::Enum(data_enum) => impl_form_for_enum(name, data_enum, ast),
         _ => panic!("Form can only be derived for structs and enums"),
     }
 }
 
-fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum) -> TokenStream {
+fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum, ast: &syn::DeriveInput) -> TokenStream {
     let variants = &data_enum.variants;
     
     // Create a discriminant enum for variant selection
@@ -422,6 +436,23 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum) -> TokenStre
         } }
     }).collect();
     
+    // Parse enum attributes to determine variant selection type
+    let enum_config = FieldConfigurationParser::parse_from_attributes(&ast.attrs);
+    let variant_selection_type = enum_config.variant_selection.as_deref().unwrap_or("select");
+
+    // Generate the variant selector component at compile time
+    let variant_selector = if variant_selection_type == "select" {
+        quote! {
+            view! { <components::Select label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant /> }.into_any()
+        }
+    } else if variant_selection_type == "radio" {
+        quote! {
+            view! { <components::Radio label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant /> }.into_any()
+        }
+    } else {
+        panic!("Unsupported variant selection type: {}", variant_selection_type);
+    };
+
     let generated = quote! {
         impl Form for #name {
             fn view(
@@ -432,10 +463,9 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum) -> TokenStre
             ) -> impl leptos::prelude::IntoView {
                 use leptos::prelude::*;
                 use formidable::components;
-                use strum::VariantArray;
                 
                 // For now, create a simple discriminant enum inline
-                #[derive(Clone, Copy, Debug, PartialEq, Eq, strum::IntoStaticStr, strum::VariantArray, Default)]
+                #[derive(Clone, Copy, Debug, PartialEq, Eq, formidable::strum::IntoStaticStr, formidable::strum::VariantArray, Default)]
                 enum #discriminant_name {
                     #[default]
                     #(#discriminant_variants),*
@@ -462,13 +492,7 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum) -> TokenStre
                     <div>
                         // Variant selector
                         <div class="variant-selector">
-                            {
-                                if #discriminant_name::VARIANTS.len() > 5 {
-                                    view! { <components::Select label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant /> }.into_any()
-                                } else {
-                                    view! { <components::Radio label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant /> }.into_any()
-                                }
-                            }
+                            { #variant_selector }
                         </div>
                         
                         // Variant-specific form
