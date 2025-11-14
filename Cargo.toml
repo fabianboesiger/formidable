@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "formidable", "formidable-derive", "formidable-example", "formidable-receipts",
+    "formidable", "formidable-derive", "formidable-example"
 ]
 resolver = "3"
 

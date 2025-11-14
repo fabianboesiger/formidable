@@ -2,7 +2,7 @@ use leptos::prelude::*;
 
 use formidable::{
     types::{Accept, Color, Date, Email, File, NonEmptyString, Optional, Tel},
-    Form, FormidableServerAction,
+    Form, FormConfiguration, FormidableServerAction, SectionHeading,
 };
 use leptos::server_fn::codec::Json;
 use serde::{Deserialize, Serialize};
@@ -116,7 +116,13 @@ enum PaymentMethod {
 #[component]
 pub fn ExampleForm() -> impl IntoView {
     view! {
-        <FormidableServerAction<HandleSubmit, FormData> label="Example Form" name="user_form" />
+        <FormidableServerAction<HandleSubmit, FormData>
+            label="Example Form"
+            name="user_form"
+            form_configuration=FormConfiguration {
+                section_label: SectionHeading::LeveledHeading(formidable::HeadingLevel::H2),
+            }
+        />
     }
 }
 

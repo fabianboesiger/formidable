@@ -2,8 +2,8 @@ use std::fmt::Display;
 
 use leptos::prelude::*;
 
+use crate::strum::VariantArray;
 use crate::{components::Description, Name};
-use strum::VariantArray;
 
 #[component]
 pub fn Radio<T>(
@@ -28,7 +28,7 @@ where
         <div class="field radio-group-field">
             <fieldset>
                 <legend>{label.get()}</legend>
-                { T::VARIANTS.iter().map(move |&option| {
+                { <T as VariantArray>::VARIANTS.iter().map(move |&option| {
                     let is_checked = move || value.get() == option;
                     let option_value: &'static str = option.into();
                     //let value_label = value_label(&option);

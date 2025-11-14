@@ -2,8 +2,8 @@ use std::fmt::Display;
 
 use leptos::prelude::*;
 
+use crate::strum::VariantArray;
 use crate::{components::Description, Name};
-use strum::VariantArray;
 
 #[component]
 pub fn Select<T>(
@@ -41,7 +41,7 @@ where
                     }
                 }
             >
-                { T::VARIANTS.iter().map(move |&option| {
+                { <T as VariantArray>::VARIANTS.iter().map(move |&option| {
                     let option_value: &'static str = option.into();
                     let is_selected = move || value.get() == option;
                     //let value_label = value_label(&option);

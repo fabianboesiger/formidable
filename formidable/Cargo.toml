@@ -13,7 +13,7 @@ leptos = { workspace = true }
 formidable-derive = { version = "0.1.0" }
 thiserror = "2.0"
 derive_more = { version = "2.0", features = ["display", "into", "deref"] }
-strum = { version = "0.27" }
+strum = { version = "0.27", features = ["derive"] }
 uuid = { version = "1.3", features = ["v4", "js"] }
 bigdecimal = { version = "0.4", optional = true }
 time = { version = "0.3", optional = true, features = ["formatting", "parsing", "macros", "local-offset", "wasm-bindgen"] }

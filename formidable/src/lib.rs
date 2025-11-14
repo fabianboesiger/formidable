@@ -16,9 +16,47 @@ use leptos::{ev::SubmitEvent, prelude::*, server_fn::ServerFn};
 
 use std::fmt::Debug;
 
+pub use strum;
+
 pub struct FieldConfiguration {
     pub label: Option<TextProp>,
     pub description: Option<TextProp>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct FormConfiguration {
+    pub section_label: SectionHeading,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HeadingLevel {
+    H1,
+    H2,
+    H3,
+    H4,
+    H5,
+    H6,
+}
+
+impl HeadingLevel {
+    pub fn to_usize(&self) -> usize {
+        match self {
+            HeadingLevel::H1 => 1,
+            HeadingLevel::H2 => 2,
+            HeadingLevel::H3 => 3,
+            HeadingLevel::H4 => 4,
+            HeadingLevel::H5 => 5,
+            HeadingLevel::H6 => 6,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum SectionHeading {
+    LeveledHeading(HeadingLevel),
+    SameHeading(HeadingLevel),
+    #[default]
+    PlainText,
 }
 
 pub trait Form: Sized + Send + Sync + 'static {
@@ -33,6 +71,8 @@ pub trait Form: Sized + Send + Sync + 'static {
 #[component]
 pub fn FormidableCallback<T>(
     #[prop(into)] label: TextProp,
+    #[prop(into, default = None)] description: Option<TextProp>,
+    #[prop(into, optional)] form_configuration: FormConfiguration,
     #[prop(into)] name: Name,
     #[prop(optional)] value: Option<T>,
     #[prop(optional)] callback: Option<Callback<Result<T, FormError>>>,
@@ -40,10 +80,12 @@ pub fn FormidableCallback<T>(
 where
     T: Form,
 {
+    provide_context(form_configuration);
+
     T::view(
         FieldConfiguration {
             label: Some(label),
-            description: None,
+            description,
         },
         name,
         value,
@@ -54,12 +96,16 @@ where
 #[component]
 pub fn FormidableRwSignal<T>(
     #[prop(into)] label: TextProp,
+    #[prop(into, default = None)] description: Option<TextProp>,
+    #[prop(into, optional)] form_configuration: FormConfiguration,
     #[prop(into)] name: Name,
     #[prop(into)] value: RwSignal<T>,
 ) -> impl IntoView
 where
     T: Form + Clone,
 {
+    provide_context(form_configuration);
+
     let callback = Callback::new(move |form_result: Result<T, FormError>| {
         if let Ok(v) = form_result {
             value.set(v);
@@ -69,7 +115,7 @@ where
     T::view(
         FieldConfiguration {
             label: Some(label),
-            description: None,
+            description,
         },
         name,
         Some(value.get_untracked()),
@@ -80,6 +126,8 @@ where
 #[component]
 pub fn FormidableServerAction<F, T>(
     #[prop(into)] label: TextProp,
+    #[prop(into, default = None)] description: Option<TextProp>,
+    #[prop(into, optional)] form_configuration: FormConfiguration,
     #[prop(into)] name: Name,
     #[prop(optional)] value: Option<T>,
     #[prop(optional)] callback: Option<Callback<F::Output, F::Error>>,
@@ -91,6 +139,8 @@ where
     F::Output: Clone + Send + Sync + 'static,
     F::Error: Clone + Send + Sync + Display + 'static,
 {
+    provide_context(form_configuration);
+
     let submit = ServerAction::<F>::new();
     let curr_value = RwSignal::new(value.as_ref().map(|v| Ok(v.clone())));
     let form_callback = Callback::new(move |form_result: Result<T, FormError>| {
@@ -130,7 +180,7 @@ where
         <form on:submit=on_submit>
             {T::view(FieldConfiguration {
                 label: Some(label),
-                description: None,
+                description,
             }, name, value, Some(form_callback)) }
             <button type="submit" disabled=submit_disabled>{t(FormMessage::SubmitButton)}</button>
             { move ||
