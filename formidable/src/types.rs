@@ -70,6 +70,7 @@ where
                 max=T::MAX
                 step=T::STEP
                 class=field.class
+                colspan=field.colspan
             />
         }
     }

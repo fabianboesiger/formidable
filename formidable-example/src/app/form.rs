@@ -40,28 +40,32 @@ struct PersonalInfo {
 }
 
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[form(columns = 2)]
 struct ContactInfo {
-    #[form(label = "Address")]
+    #[form(label = "Address", colspan = 2)]
     address: Address,
     #[form(label = "Email Address")]
     email: Email,
     #[form(label = "Phone Number")]
     phone: Tel,
-    #[form(label = "Website")]
+    #[form(label = "Website", colspan = 2)]
     website: Optional<Url>,
 }
 
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[form(columns = 12)]
 struct Address {
-    #[form(label = "Street")]
+    #[form(label = "Street", colspan = 8)]
     street: String,
-    #[form(label = "City")]
-    city: String,
-    #[form(label = "State")]
-    state: String,
-    #[form(label = "Zip Code")]
+    #[form(label = "House Number", colspan = 4)]
+    house_number: String,
+    #[form(label = "Zip Code", colspan = 4)]
     zip: String,
-    #[form(label = "Country")]
+    #[form(label = "City", colspan = 8)]
+    city: String,
+    #[form(label = "State", colspan = 8)]
+    state: String,
+    #[form(label = "Country", colspan = 4)]
     country: Country,
 }
 

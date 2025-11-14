@@ -16,6 +16,7 @@ pub fn Checkbox<T>(
     #[prop(into)] value: Option<T>,
     #[prop(into)] callback: Option<Callback<Result<T, FieldError>>>,
     #[prop(into, default = None)] class: Option<String>,
+    #[prop(into, default = None)] colspan: Option<u32>,
 ) -> impl IntoView
 where
     T: Clone + Into<bool> + TryFrom<bool> + Send + Sync + 'static,
@@ -40,7 +41,11 @@ where
     });
 
     view! {
-        <div class:error={move || touched.get() && value.get().is_err()} class={format!("field checkbox-field{}", class.as_ref().map(|c| format!(" {}", c)).unwrap_or_default())}>
+        <div
+            class:error={move || touched.get() && value.get().is_err()}
+            class={format!("field checkbox-field{}", class.as_ref().map(|c| format!(" {}", c)).unwrap_or_default())}
+            style={colspan.map(|cols| format!("grid-column: span {};", cols))}
+        >
             <label for=name.to_string()>
                 <span class="custom custom-checkbox"></span>
                 <input

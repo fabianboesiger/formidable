@@ -12,6 +12,7 @@ pub fn Select<T>(
     name: Name,
     value: RwSignal<T>,
     #[prop(into, default = None)] class: Option<String>,
+    #[prop(into, default = None)] colspan: Option<u32>,
     //value_label: impl Fn(&T) -> TextProp + 'static,
 ) -> impl IntoView
 where
@@ -26,7 +27,10 @@ where
         + 'static,
 {
     view! {
-        <div class={format!("field select-field{}", class.as_ref().map(|c| format!(" {}", c)).unwrap_or_default())}>
+        <div
+            class={format!("field select-field{}", class.as_ref().map(|c| format!(" {}", c)).unwrap_or_default())}
+            style={colspan.map(|cols| format!("grid-column: span {};", cols))}
+        >
             <label for=name.to_string()>{label.get()}</label>
             <select
                 name=name.to_string()

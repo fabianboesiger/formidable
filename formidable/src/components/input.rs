@@ -22,6 +22,7 @@ pub fn Input<T>(
     #[prop(into, default = None)] maxlength: Option<usize>,
     #[prop(into, default = Vec::default())] datalist: Vec<T>,
     #[prop(into, default = None)] class: Option<String>,
+    #[prop(into, default = None)] colspan: Option<u32>,
 ) -> impl IntoView
 where
     T: Clone + Display + FromStr + Send + Sync + 'static,
@@ -46,7 +47,11 @@ where
     });
 
     view! {
-        <div class:error={move || touched.get() && value.get().is_err()} class={format!("field input-field{}", class.as_ref().map(|c| format!(" {}", c)).unwrap_or_default())}>
+        <div
+            class:error={move || touched.get() && value.get().is_err()}
+            class={format!("field input-field{}", class.as_ref().map(|c| format!(" {}", c)).unwrap_or_default())}
+            style={colspan.map(|cols| format!("grid-column: span {};", cols))}
+        >
             <label for=name.to_string()>{label.get()}</label>
             <input
                 node_ref=node_ref

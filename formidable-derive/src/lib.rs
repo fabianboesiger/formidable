@@ -44,6 +44,8 @@ struct FieldConfigurationParser {
     description: Option<Expr>,
     variant_selection: Option<String>,
     class: Option<String>,
+    columns: Option<u32>,
+    colspan: Option<u32>,
 }
 
 impl FieldConfigurationParser {
@@ -91,6 +93,24 @@ impl FieldConfigurationParser {
                                             }
                                         }
                                     },
+                                    "columns" => {
+                                        if let Expr::Lit(expr_lit) = &value {
+                                            if let Lit::Int(lit_int) = &expr_lit.lit {
+                                                if let Ok(columns) = lit_int.base10_parse::<u32>() {
+                                                    config.columns = Some(columns);
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "colspan" => {
+                                        if let Expr::Lit(expr_lit) = &value {
+                                            if let Lit::Int(lit_int) = &expr_lit.lit {
+                                                if let Ok(colspan) = lit_int.base10_parse::<u32>() {
+                                                    config.colspan = Some(colspan);
+                                                }
+                                            }
+                                        }
+                                    },
                                     _ => {} // Ignore unknown attributes
                                 }
                             }
@@ -112,6 +132,22 @@ impl FieldConfigurationParser {
                             if let Expr::Lit(expr_lit) = value {
                                 if let Lit::Str(lit_str) = &expr_lit.lit {
                                     config.class = Some(lit_str.value());
+                                }
+                            }
+                        } else if path.is_ident("columns") {
+                            if let Expr::Lit(expr_lit) = value {
+                                if let Lit::Int(lit_int) = &expr_lit.lit {
+                                    if let Ok(columns) = lit_int.base10_parse::<u32>() {
+                                        config.columns = Some(columns);
+                                    }
+                                }
+                            }
+                        } else if path.is_ident("colspan") {
+                            if let Expr::Lit(expr_lit) = value {
+                                if let Lit::Int(lit_int) = &expr_lit.lit {
+                                    if let Ok(colspan) = lit_int.base10_parse::<u32>() {
+                                        config.colspan = Some(colspan);
+                                    }
                                 }
                             }
                         }
@@ -142,11 +178,18 @@ impl FieldConfigurationParser {
             quote! { None }
         };
 
+        let colspan = if let Some(colspan_val) = &self.colspan {
+            quote! { Some(#colspan_val) }
+        } else {
+            quote! { None }
+        };
+
         quote! {
             formidable::FieldConfiguration {
                 label: Some(#label),
                 description: #description,
                 class: #class,
+                colspan: #colspan,
             }
         }
     }
@@ -469,11 +512,11 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum, ast: &syn::D
     // Generate the variant selector component at compile time
     let variant_selector = if variant_selection_type == "select" {
         quote! {
-            view! { <components::Select label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant class=field.class /> }.into_any()
+            view! { <components::Select label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant class=field.class colspan=field.colspan /> }.into_any()
         }
     } else if variant_selection_type == "radio" {
         quote! {
-            view! { <components::Radio label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant class=field.class /> }.into_any()
+            view! { <components::Radio label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant class=field.class colspan=field.colspan /> }.into_any()
         }
     } else {
         panic!("Unsupported variant selection type: {}", variant_selection_type);
@@ -515,7 +558,10 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum, ast: &syn::D
                 }
                 
                 view! {
-                    <div class={#enum_class}>
+                    <div 
+                        class={#enum_class}
+                        style={field.colspan.map(|cols| format!("grid-column: span {};", cols))}
+                    >
                         // Variant selector
                         <div class="enum-variant-selector">
                             { #variant_selector }
@@ -545,10 +591,15 @@ fn impl_form_for_struct(name: &syn::Ident, data_struct: &syn::DataStruct, ast: &
         _ => panic!("Form can only be derived for structs with named fields"),
     };
 
-    // Parse struct attributes to get class
+    // Parse struct attributes to get class and columns
     let struct_config = FieldConfigurationParser::parse_from_attributes(&ast.attrs);
     let struct_class = if let Some(class_str) = &struct_config.class {
         quote! { Some(String::from(#class_str)) }
+    } else {
+        quote! { None }
+    };
+    let struct_columns = if let Some(columns_val) = &struct_config.columns {
+        quote! { Some(#columns_val) }
     } else {
         quote! { None }
     };
@@ -583,12 +634,7 @@ fn impl_form_for_struct(name: &syn::Ident, data_struct: &syn::DataStruct, ast: &
                 #callback_effect
 
                 view! {
-                    <formidable::components::Section name=name heading={field.label} class=#struct_class>
-                        {
-                            field.description.clone().map(|desc| view! {
-                                <p class="description">{desc.get()}</p>
-                            })
-                        }
+                    <formidable::components::Section name=name heading={field.label} description={field.description} class=#struct_class columns=#struct_columns colspan={field.colspan}>
                         #(#field_forms)*
                     </formidable::components::Section>
                 }.into_any()

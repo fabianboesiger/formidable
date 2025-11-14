@@ -59,6 +59,7 @@ impl Form for bool {
                     callback.run(v.map_err(FormError::from));
                 }))}
                 class=field.class
+                colspan=field.colspan
             />
         }
     }
@@ -144,6 +145,7 @@ where
                                     label: None,
                                     description: None,
                                     class: None,
+                                    colspan: None,
                                 }, name.push_index(index), child.value.and_then(|v| v.ok()), Some(Callback::new(move |v: Result<T, FormError>| {
                                     let mut children = children.write();
                                     if let Some(pos) = children.iter().position(|c| c.id == child.id) {
