@@ -44,7 +44,7 @@ struct PersonalInfo {
 struct ContactInfo {
     #[form(label = "Address", colspan = 2)]
     address: Address,
-    #[form(label = "Email Address")]
+    #[form(label = "Email Address", placeholder = "test@example.com")]
     email: Email,
     #[form(label = "Phone Number")]
     phone: Tel,

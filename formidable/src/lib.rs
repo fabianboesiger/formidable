@@ -23,6 +23,7 @@ pub struct FieldConfiguration {
     pub description: Option<TextProp>,
     pub class: Option<String>,
     pub colspan: Option<u32>,
+    pub placeholder: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -90,6 +91,7 @@ where
             description,
             class: None,
             colspan: None,
+            placeholder: None,
         },
         name,
         value,
@@ -122,6 +124,7 @@ where
             description,
             class: None,
             colspan: None,
+            placeholder: None,
         },
         name,
         Some(value.get_untracked()),
@@ -189,6 +192,7 @@ where
                 description,
                 class: None,
                 colspan: None,
+                placeholder: None,
             }, name, value, Some(form_callback)) }
             <button type="submit" disabled=submit_disabled>{t(FormMessage::SubmitButton)}</button>
             { move ||

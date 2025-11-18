@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 leptos = { workspace = true }
-formidable-derive = { version = "0.1.0" }
+formidable-derive = { path = "../formidable-derive" }
 thiserror = "2.0"
 derive_more = { version = "2.0", features = ["display", "into", "deref"] }
 strum = { version = "0.27", features = ["derive"] }

@@ -62,7 +62,13 @@ where
                     callback.run(v.map_err(FormError::from));
                 }))}
                 input_type=T::INPUT_TYPE
-                placeholder=T::PLACEHOLDER
+                placeholder={field.placeholder.and_then(|p| {
+                    let result = p.parse::<T>().ok();
+                    if result.is_none() {
+                        leptos::logging::warn!("Failed to parse placeholder '{}' for field '{}'", p, name);
+                    }
+                    result
+                })}
                 required=T::REQUIRED
                 minlength=T::MIN_LENGTH
                 maxlength=T::MAX_LENGTH
@@ -78,7 +84,6 @@ where
 
 pub trait FormType: Clone + Display + FromStr + Send + Sync + 'static {
     const INPUT_TYPE: InputType;
-    const PLACEHOLDER: Option<Self> = None;
     const REQUIRED: Option<bool> = None;
     const MIN_LENGTH: Option<usize> = None;
     const MAX_LENGTH: Option<usize> = None;

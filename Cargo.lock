@@ -790,7 +790,7 @@ dependencies = [
  "color",
  "deranged",
  "derive_more",
- "formidable-derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "formidable-derive",
  "leptos",
  "serde",
  "strum",
@@ -805,17 +805,6 @@ dependencies = [
 [[package]]
 name = "formidable-derive"
 version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "formidable-derive"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60a90232427009917a9a45fc369d1820bf005052be8b220a34639a878003b512"
 dependencies = [
  "proc-macro2",
  "quote",

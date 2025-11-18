@@ -146,6 +146,7 @@ where
                                     description: None,
                                     class: None,
                                     colspan: None,
+                                    placeholder: None,
                                 }, name.push_index(index), child.value.and_then(|v| v.ok()), Some(Callback::new(move |v: Result<T, FormError>| {
                                     let mut children = children.write();
                                     if let Some(pos) = children.iter().position(|c| c.id == child.id) {

@@ -46,6 +46,7 @@ struct FieldConfigurationParser {
     class: Option<String>,
     columns: Option<u32>,
     colspan: Option<u32>,
+    placeholder: Option<String>,
 }
 
 impl FieldConfigurationParser {
@@ -111,6 +112,13 @@ impl FieldConfigurationParser {
                                             }
                                         }
                                     },
+                                    "placeholder" => {
+                                        if let Expr::Lit(expr_lit) = &value {
+                                            if let Lit::Str(lit_str) = &expr_lit.lit {
+                                                config.placeholder = Some(lit_str.value());
+                                            }
+                                        }
+                                    },
                                     _ => {} // Ignore unknown attributes
                                 }
                             }
@@ -150,6 +158,12 @@ impl FieldConfigurationParser {
                                     }
                                 }
                             }
+                        } else if path.is_ident("placeholder") {
+                            if let Expr::Lit(expr_lit) = value {
+                                if let Lit::Str(lit_str) = &expr_lit.lit {
+                                    config.placeholder = Some(lit_str.value());
+                                }
+                            }
                         }
                     },
                     _ => {} // Ignore other meta types
@@ -184,12 +198,19 @@ impl FieldConfigurationParser {
             quote! { None }
         };
 
+        let placeholder = if let Some(placeholder_str) = &self.placeholder {
+            quote! { Some(String::from(#placeholder_str)) }
+        } else {
+            quote! { None }
+        };
+
         quote! {
             formidable::FieldConfiguration {
                 label: Some(#label),
                 description: #description,
                 class: #class,
                 colspan: #colspan,
+                placeholder: #placeholder,
             }
         }
     }
