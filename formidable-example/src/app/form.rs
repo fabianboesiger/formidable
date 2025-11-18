@@ -10,6 +10,7 @@ use std::fmt::Debug;
 use url::Url;
 
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[form(render_as = "paginate")]
 struct FormData {
     #[form(
         label = personal_information,
@@ -27,7 +28,6 @@ struct FormData {
 }
 
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[form(class = "personal-info-section")]
 struct PersonalInfo {
     #[form(label = "Full Name", class = "special-input")]
     name: NonEmptyString,
@@ -86,7 +86,7 @@ struct Payment {
 }
 
 #[derive(Form, Clone, Copy, Debug, PartialEq, Default, Serialize, Deserialize)]
-#[form(variant_selection = "select", class = "country-selector")]
+#[form(render_as = "select")]
 enum Country {
     #[form(label = "Switzerland")]
     #[default]
@@ -104,7 +104,7 @@ enum Country {
 }
 
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[form(variant_selection = "radio", class = "payment-method-selector")]
+#[form(render_as = "radio", class = "payment-method-selector")]
 enum PaymentMethod {
     #[form(label = "Credit Card")]
     CreditCard(String),

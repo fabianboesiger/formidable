@@ -47,6 +47,16 @@ form {
 		gap: 0 16px;
 	}
 
+	.form-section-pagination-controls {
+		margin-top: 16px;
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.form-section-progress {
+		display: none;
+	}
+
 	.description {
 		margin-top: 0;
 	}

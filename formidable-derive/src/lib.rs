@@ -42,7 +42,7 @@ fn create_string_from_expr(expr: &Expr) -> proc_macro2::TokenStream {
 struct FieldConfigurationParser {
     label: Option<Expr>,
     description: Option<Expr>,
-    variant_selection: Option<String>,
+    render_as: Option<String>,
     class: Option<String>,
     columns: Option<u32>,
     colspan: Option<u32>,
@@ -79,10 +79,10 @@ impl FieldConfigurationParser {
                                 match name.to_string().as_str() {
                                     "label" => config.label = Some(value),
                                     "description" => config.description = Some(value),
-                                    "variant_selection" => {
+                                    "render_as" => {
                                         if let Expr::Lit(expr_lit) = &value {
                                             if let Lit::Str(lit_str) = &expr_lit.lit {
-                                                config.variant_selection = Some(lit_str.value());
+                                                config.render_as = Some(lit_str.value());
                                             }
                                         }
                                     },
@@ -122,10 +122,10 @@ impl FieldConfigurationParser {
                             config.label = Some(value.clone());
                         } else if path.is_ident("description") {
                             config.description = Some(value.clone());
-                        } else if path.is_ident("variant_selection") {
+                        } else if path.is_ident("render_as") {
                             if let Expr::Lit(expr_lit) = value {
                                 if let Lit::Str(lit_str) = &expr_lit.lit {
-                                    config.variant_selection = Some(lit_str.value());
+                                    config.render_as = Some(lit_str.value());
                                 }
                             }
                         } else if path.is_ident("class") {
@@ -502,7 +502,7 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum, ast: &syn::D
     
     // Parse enum attributes to determine variant selection type and class
     let enum_config = FieldConfigurationParser::parse_from_attributes(&ast.attrs);
-    let variant_selection_type = enum_config.variant_selection.as_deref().unwrap_or("radio");
+    let variant_selection_type = enum_config.render_as.as_deref().unwrap_or("radio");
     let enum_class = if let Some(class_str) = &enum_config.class {
         format!("enum {}", class_str)
     } else {
@@ -519,7 +519,7 @@ fn impl_form_for_enum(name: &syn::Ident, data_enum: &syn::DataEnum, ast: &syn::D
             view! { <components::Radio label=field.label.expect("No label provided") name=name.push_key("variant") value=selected_discriminant class=field.class colspan=field.colspan /> }.into_any()
         }
     } else {
-        panic!("Unsupported variant selection type: {}", variant_selection_type);
+        panic!("Unsupported render_as type: {}", variant_selection_type);
     };
 
     let generated = quote! {
@@ -591,8 +591,9 @@ fn impl_form_for_struct(name: &syn::Ident, data_struct: &syn::DataStruct, ast: &
         _ => panic!("Form can only be derived for structs with named fields"),
     };
 
-    // Parse struct attributes to get class and columns
+    // Parse struct attributes to get class, columns, and render_as
     let struct_config = FieldConfigurationParser::parse_from_attributes(&ast.attrs);
+    let render_as_type = struct_config.render_as.as_deref().unwrap_or("section");
     let struct_class = if let Some(class_str) = &struct_config.class {
         quote! { Some(String::from(#class_str)) }
     } else {
@@ -633,11 +634,23 @@ fn impl_form_for_struct(name: &syn::Ident, data_struct: &syn::DataStruct, ast: &
 
                 #callback_effect
 
-                view! {
-                    <formidable::components::Section name=name heading={field.label} description={field.description} class=#struct_class columns=#struct_columns colspan={field.colspan}>
-                        #(#field_forms)*
-                    </formidable::components::Section>
-                }.into_any()
+                // Choose between Section and PaginatedSection based on render_as attribute
+                if #render_as_type == "paginate" {
+                    let pages: Vec<Box<dyn Fn() -> leptos::prelude::AnyView + Send + Sync>> = vec![
+                        #(Box::new(move || #field_forms.into_any())),*
+                    ];
+                    view! {
+                        <formidable::components::PaginatedSection name=name heading={field.label} description={field.description} class=#struct_class columns=#struct_columns colspan={field.colspan} pages=pages />
+                    }.into_any()
+                } else if #render_as_type == "section" {
+                    view! {
+                        <formidable::components::Section name=name heading={field.label} description={field.description} class=#struct_class columns=#struct_columns colspan={field.colspan}>
+                            #(#field_forms)*
+                        </formidable::components::Section>
+                    }.into_any()
+                } else {
+                    panic!("Unsupported render_as type for struct: {}. Supported values are 'section' (default) and 'paginate'", #render_as_type);
+                }
             }
         }
     };
