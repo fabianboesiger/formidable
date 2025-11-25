@@ -1,7 +1,8 @@
 use leptos::prelude::*;
 
 use crate::{
-    components::section_heading_view::SectionHeadingView, components::Description, name::Name,
+    components::{section_heading_view::SectionHeadingView, Description},
+    name::Name,
     FormConfiguration,
 };
 

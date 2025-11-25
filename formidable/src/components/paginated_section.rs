@@ -56,13 +56,17 @@ pub fn PaginatedSection(
             <div class="form-section-pagination-controls">
                 <button
                     type="button"
-                    on:click={move |_| current_page.update(|p| if *p > 0 { *p -= 1; })}
+                    on:click={move |_| {
+                        current_page.update(|p| if *p > 0 { *p -= 1; })
+                    }}
                     disabled={move || current_page.get() == 0}
                 >{"Prev"}</button>
                 <span>{move || format!("Page {} of {}", current_page.get() + 1, total_pages)}</span>
                 <button
                     type="button"
-                    on:click={move |_| current_page.update(|p| if *p + 1 < total_pages { *p += 1; })}
+                    on:click={move |_| {
+                            current_page.update(|p| if *p + 1 < total_pages { *p += 1; });
+                    }}
                     disabled={move || current_page.get() + 1 == total_pages}
                 >{"Next"}</button>
             </div>

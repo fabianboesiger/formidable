@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 
 use formidable::{
-    types::{Accept, Color, Date, Email, File, NonEmptyString, Optional, Tel},
+    types::{Accept, Color, Date, Email, File, NonEmptyString, Tel},
     Form, FormConfiguration, FormidableServerAction, SectionHeading,
 };
 use leptos::server_fn::codec::Json;
@@ -16,7 +16,7 @@ struct FormData {
         label = personal_information,
         description = "Please provide your personal details."
     )]
-    personal_info: PersonalInfo,
+    personal_info: Option<PersonalInfo>,
     #[form(label = "Contact Information")]
     contact_info: ContactInfo,
     #[form(label = "Order")]
@@ -48,8 +48,8 @@ struct ContactInfo {
     email: Email,
     #[form(label = "Phone Number")]
     phone: Tel,
-    #[form(label = "Website", colspan = 2)]
-    website: Optional<Url>,
+    #[form(label = "Website", colspan = 1)]
+    website: Option<Url>,
 }
 
 #[derive(Form, Clone, Debug, PartialEq, Serialize, Deserialize)]

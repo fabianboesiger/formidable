@@ -29,6 +29,23 @@ impl Name {
     pub fn push_key(self, key: &'static str) -> Self {
         self.push(NamePart::Key(key))
     }
+
+    pub fn contains(self, other: Name) -> bool {
+        let self_len = self.len();
+        let other_len = other.len();
+
+        if other_len > self_len {
+            return false;
+        }
+
+        for i in 0..other_len {
+            if self.0[i] != other.0[i] {
+                return false;
+            }
+        }
+
+        true
+    }
 }
 
 impl<T> From<T> for Name

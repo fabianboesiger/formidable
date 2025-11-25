@@ -5,12 +5,14 @@ mod error;
 mod name;
 pub mod types;
 
+use bigdecimal::num_bigint::Sign;
 pub use error::*;
 pub use name::*;
 
 use derive_more::Display;
 pub use formidable_derive::Form;
-use std::{fmt::Display, marker::PhantomData, sync::Arc};
+use std::{collections::HashMap, fmt::Display, marker::PhantomData, str::FromStr, sync::Arc};
+use web_sys::wasm_bindgen::JsCast;
 
 use leptos::{ev::SubmitEvent, prelude::*, server_fn::ServerFn};
 
@@ -18,6 +20,87 @@ use std::fmt::Debug;
 
 pub use strum;
 
+#[derive(Clone, Copy)]
+pub struct FormContext(RwSignal<FormContextInner>);
+
+pub struct FormContextInner {
+    name: Name,
+    children: HashMap<Name, FormContext>,
+    fields: HashMap<Name, FieldContext>,
+}
+
+impl FormContext {
+    pub fn new(name: Name) -> Self {
+        Self(RwSignal::new(FormContextInner {
+            name,
+            children: HashMap::new(),
+            fields: HashMap::new(),
+        }))
+    }
+
+    pub fn new_field(&self, name_part: NamePart) -> FieldContext {
+        let new_name = self.0.read_untracked().name.push(name_part);
+
+        let this = FieldContext(RwSignal::new(FieldContextInner {
+            name: new_name,
+            error: RwSignal::new(None),
+            touched: RwSignal::new(false),
+            disabled: RwSignal::new(false),
+            optional: RwSignal::new(false),
+        }));
+
+        let parent = self.0;
+
+        parent.update(|inner: &mut FormContextInner| {
+            inner.fields.insert(new_name, this);
+        });
+
+        on_cleanup(move || {
+            parent.update(|inner| {
+                inner.fields.remove(&new_name);
+            });
+        });
+
+        this
+    }
+
+    pub fn new_child(&self, name_part: NamePart) -> FormContext {
+        let new_name = self.0.read_untracked().name.push(name_part);
+
+        let this = Self(RwSignal::new(FormContextInner {
+            name: new_name,
+            children: HashMap::new(),
+            fields: HashMap::new(),
+        }));
+
+        let parent = self.0;
+
+        parent.update(|inner| {
+            inner.children.insert(new_name, this);
+        });
+
+        on_cleanup(move || {
+            parent.update(|inner| {
+                inner.children.remove(&new_name);
+            });
+        });
+
+        this
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct FieldContext(RwSignal<FieldContextInner>);
+
+pub struct FieldContextInner {
+    pub name: Name,
+    pub error: RwSignal<Option<FieldError>>,
+    pub touched: RwSignal<bool>,
+    pub disabled: RwSignal<bool>,
+    pub optional: RwSignal<bool>,
+}
+
+#[derive(Clone)]
 pub struct FieldConfiguration {
     pub label: Option<TextProp>,
     pub description: Option<TextProp>,
@@ -78,25 +161,53 @@ pub fn FormidableCallback<T>(
     #[prop(into, optional)] form_configuration: FormConfiguration,
     #[prop(into)] name: Name,
     #[prop(optional)] value: Option<T>,
-    #[prop(optional)] callback: Option<Callback<Result<T, FormError>>>,
+    #[prop(into)] callback: Callback<T>,
 ) -> impl IntoView
 where
-    T: Form,
+    T: Form + Clone,
 {
+    let curr_value = RwSignal::new(None);
+    let form_callback = Callback::new(
+        move |form_result: Result<T, FormError>| match &form_result {
+            Ok(v) => {
+                curr_value.set(Some(v.clone()));
+            }
+            Err(_) => {
+                curr_value.set(None);
+            }
+        },
+    );
+
+    let submit_disabled = Signal::derive(move || curr_value.get().is_none());
+
+    let on_submit = {
+        move |ev: SubmitEvent| {
+            if ev.default_prevented() {
+                return;
+            }
+
+            ev.prevent_default();
+
+            if let Some(value) = curr_value.get_untracked() {
+                callback.run(value.clone());
+            }
+        }
+    };
+
     provide_context(form_configuration);
 
-    T::view(
-        FieldConfiguration {
-            label: Some(label),
-            description,
-            class: None,
-            colspan: None,
-            placeholder: None,
-        },
-        name,
-        value,
-        callback,
-    )
+    view! {
+        <form on:submit=on_submit>
+            {T::view(FieldConfiguration {
+                label: Some(label),
+                description,
+                class: None,
+                colspan: None,
+                placeholder: None,
+            }, name, value, Some(form_callback)) }
+            <button type="submit" disabled=submit_disabled>{t(FormMessage::SubmitButton)}</button>
+        </form>
+    }
 }
 
 #[component]
@@ -139,7 +250,7 @@ pub fn FormidableServerAction<F, T>(
     #[prop(into, optional)] form_configuration: FormConfiguration,
     #[prop(into)] name: Name,
     #[prop(optional)] value: Option<T>,
-    #[prop(optional)] callback: Option<Callback<F::Output, F::Error>>,
+    #[prop(optional)] callback: Option<Callback<F::Output, ()>>,
     #[prop(optional)] _phantom: PhantomData<F>,
 ) -> impl IntoView
 where

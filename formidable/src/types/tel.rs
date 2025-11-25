@@ -11,6 +11,8 @@ pub struct Tel(String);
 
 #[derive(Debug, Clone, Copy, Error, PartialEq, Eq, Hash)]
 pub enum TelError {
+    #[error("The telephone number is required")]
+    Required,
     #[error("Invalid format")]
     InvalidFormat,
 }
@@ -19,6 +21,10 @@ impl FromStr for Tel {
     type Err = TelError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.is_empty() {
+            return Err(TelError::Required);
+        }
+
         if s.chars()
             .all(|c| c.is_ascii_digit() || c == '+' || c == '-' || c == ' ' || c == '(' || c == ')')
             && !s.is_empty()

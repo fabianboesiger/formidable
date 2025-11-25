@@ -9,7 +9,7 @@ mod email;
 #[cfg(feature = "file")]
 mod file;
 mod non_empty_string;
-mod optional;
+mod option;
 mod std_types;
 mod tel;
 #[cfg(feature = "time")]
@@ -26,7 +26,7 @@ pub use email::*;
 #[cfg(feature = "file")]
 pub use file::*;
 pub use non_empty_string::*;
-pub use optional::*;
+pub use option::*;
 pub use tel::*;
 #[cfg(feature = "time")]
 pub use time::*;

@@ -35,7 +35,10 @@ where
 
     if let Some(callback) = callback {
         Effect::new(move |_| {
-            callback.run(value.get().map_err(|err| FieldError::new(name, err)));
+            let result = value
+                .get()
+                .map_err(|err| FieldError::new_string(name, err, raw_value.get_untracked()));
+            callback.run(result);
         });
     }
 

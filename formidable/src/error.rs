@@ -6,9 +6,16 @@ use std::{
 use crate::Name;
 
 #[derive(Clone)]
+pub enum RawValue {
+    String(String),
+    Other,
+}
+
+#[derive(Clone)]
 pub struct FieldError {
     name: Name,
     error: Arc<dyn Display + Send + Sync>,
+    raw_value: RawValue,
 }
 
 impl Debug for FieldError {
@@ -28,6 +35,17 @@ impl Display for FieldError {
 }
 
 impl FieldError {
+    pub fn new_string<E>(name: Name, err: E, raw_value: String) -> Self
+    where
+        E: Display + Send + Sync + 'static,
+    {
+        FieldError {
+            name,
+            error: Arc::new(err),
+            raw_value: RawValue::String(raw_value),
+        }
+    }
+
     pub fn new<E>(name: Name, err: E) -> Self
     where
         E: Display + Send + Sync + 'static,
@@ -35,6 +53,7 @@ impl FieldError {
         FieldError {
             name,
             error: Arc::new(err),
+            raw_value: RawValue::Other,
         }
     }
 
