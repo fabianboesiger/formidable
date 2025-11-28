@@ -375,6 +375,33 @@ enum ConstructorType<'a> {
     },
 }
 
+fn generate_empty_struct_form(name: &syn::Ident) -> TokenStream {
+    let generated = quote! {
+        impl Form for #name {
+            fn view(
+                _field: formidable::FieldConfiguration,
+                _name: formidable::Name,
+                _value: Option<Self>,
+                callback: Option<leptos::prelude::Callback<Result<Self, formidable::FormError>>>,
+            ) -> impl leptos::prelude::IntoView {
+                use leptos::prelude::*;
+                
+                // For empty structs, immediately call callback with the struct instance
+                if let Some(callback) = callback {
+                    Effect::new(move |_| {
+                        callback.run(Ok(#name));
+                    });
+                }
+
+                // Render nothing for unit structs
+                view! {}.into_any()
+            }
+        }
+    };
+
+    generated.into()
+}
+
 fn impl_form_macro(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
 
@@ -609,7 +636,11 @@ fn impl_form_for_struct(name: &syn::Ident, data_struct: &syn::DataStruct, ast: &
     // Parse the struct data
     let fields = match &data_struct.fields {
         syn::Fields::Named(fields_named) => &fields_named.named,
-        _ => panic!("Form can only be derived for structs with named fields"),
+        syn::Fields::Unit => {
+            // Handle unit structs (no fields) - they should render nothing
+            return generate_empty_struct_form(name);
+        }
+        _ => panic!("Form can only be derived for structs with named fields or unit structs"),
     };
 
     // Parse struct attributes to get class, columns, and render_as
